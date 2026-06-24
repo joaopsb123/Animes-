@@ -13,366 +13,112 @@
             padding: 15px;
             min-height: 100vh;
         }
-        h1 { color: #e94560; text-align: center; margin: 10px 0; }
-        
-        .search-box {
-            display: flex; gap: 8px; margin: 15px auto;
-            max-width: 500px;
-        }
+        h1 { color: #e94560; text-align: center; margin: 15px 0; }
+        .search { display: flex; gap: 8px; max-width: 500px; margin: 0 auto 20px auto; }
         input {
             flex: 1; padding: 12px; border-radius: 8px;
             border: 1px solid #333; background: #1a1a2e;
-            color: #eee; font-size: 16px; outline: none;
+            color: #eee; font-size: 16px;
         }
-        input:focus { border-color: #e94560; }
         button {
             padding: 12px 20px; background: #e94560; color: #fff;
             border: none; border-radius: 8px; font-size: 16px; cursor: pointer;
         }
-        button:disabled { background: #555; }
-        
-        #results {
+        .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 10px; max-width: 800px; margin: 0 auto;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px; max-width: 900px; margin: 0 auto;
         }
-        .anime-card {
+        .card {
             background: #1a1a2e; border-radius: 10px; padding: 15px;
-            cursor: pointer; border: 1px solid #16213e;
+            border: 1px solid #16213e;
         }
-        .anime-card:hover { border-color: #e94560; }
-        .anime-card h3 { font-size: 15px; margin-bottom: 5px; }
-        .anime-card p { color: #999; font-size: 12px; }
-        .anime-card .link { color: #e94560; font-size: 11px; word-break: break-all; }
-        
-        .loading, .error { text-align: center; padding: 30px; }
-        .error { color: #e94560; }
-        .error a { color: #e94560; }
-        
-        /* Modal */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.9);
-            z-index: 1000; overflow-y: auto; padding: 20px;
+        .card h3 { font-size: 16px; margin-bottom: 8px; }
+        .card .info { font-size: 12px; color: #aaa; margin-bottom: 6px; }
+        .card .score { color: #ffd700; }
+        .card .eps { color: #4ecca3; }
+        .card .sinopse { font-size: 11px; color: #999; margin-bottom: 12px; }
+        .card a {
+            display: block; text-align: center; padding: 10px;
+            border-radius: 6px; text-decoration: none; font-size: 14px; margin-bottom: 5px;
         }
-        .modal.active { display: block; }
-        .modal-content {
-            background: #0a0a1a; border-radius: 15px;
-            max-width: 500px; margin: 30px auto; padding: 20px;
-        }
-        .modal-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; border-bottom: 1px solid #16213e; padding-bottom: 10px;
-        }
-        .modal-header h2 { color: #e94560; font-size: 16px; flex: 1; }
-        .close { color: #fff; font-size: 24px; cursor: pointer; background: none; border: none; }
-        
-        .ep-item {
-            display: flex; align-items: center; padding: 10px;
-            background: #1a1a2e; margin-bottom: 5px; border-radius: 8px;
-            cursor: pointer; gap: 10px;
-        }
-        .ep-item:hover { background: #16213e; }
-        .ep-item .num { color: #e94560; font-weight: bold; min-width: 45px; }
-        .ep-item .title { flex: 1; font-size: 13px; }
-        .ep-item .play { color: #e94560; }
-        
-        .btn-externo {
-            display: block; text-align: center; padding: 12px;
-            background: #e94560; color: #fff; border-radius: 8px;
-            text-decoration: none; margin-top: 10px; font-weight: bold;
-        }
-        
-        /* Player */
-        .player {
-            display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: #000; z-index: 2000;
-            flex-direction: column;
-        }
-        .player.active { display: flex; }
-        .player-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 15px; background: #1a1a2e;
-        }
-        .player-header span { color: #e94560; cursor: pointer; }
-        iframe { flex: 1; border: none; width: 100%; }
+        .card a.animefire { background: #e94560; color: #fff; }
+        .card a.animefire:hover { background: #c73a52; }
+        .card a.gogo { background: #4ecca3; color: #000; }
+        .card a.gogo:hover { background: #3da882; }
+        .loading { text-align: center; padding: 40px; color: #aaa; }
+        .vazio { text-align: center; padding: 60px; color: #555; }
     </style>
 </head>
 <body>
 
-    <h1>🍥 AnimeFire Player</h1>
+    <h1>🍥 Anime Player</h1>
 
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Nome do anime..." autofocus>
-        <button id="searchBtn" onclick="search()">🔍</button>
+    <div class="search">
+        <input type="text" id="pesquisa" placeholder="Nome do anime..." autofocus>
+        <button onclick="buscar()">🔍</button>
     </div>
 
-    <div id="results"></div>
-    <div id="loading" class="loading" style="display:none;">Buscando...</div>
-    <div id="error" class="error" style="display:none;"></div>
-
-    <!-- Modal Episódios -->
-    <div id="epModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle"></h2>
-                <button class="close" onclick="closeModal()">✕</button>
-            </div>
-            <div id="epList"></div>
-        </div>
-    </div>
-
-    <!-- Player -->
-    <div id="playerOverlay" class="player">
-        <div class="player-header">
-            <span onclick="closePlayer()">← Voltar</span>
-            <span style="color:#eee;" id="playerTitle">Player</span>
-            <span></span>
-        </div>
-        <iframe id="playerFrame" allowfullscreen></iframe>
-    </div>
+    <div class="grid" id="lista"></div>
+    <div class="loading" id="loading" style="display:none;">A buscar...</div>
 
     <script>
-        const BASE = 'https://animefire.io';
-        
-        // Proxies CORS
-        const PROXIES = [
-            'https://api.allorigins.win/raw?url=',
-            'https://corsproxy.io/?',
-            'https://api.codetabs.com/v1/proxy?quest=',
-        ];
+        const ANIMEFIRE = 'https://animefire.io';
+        const GOGO = 'https://gogoanimes.cv';
 
-        async function fetchUrl(url) {
-            // Tenta proxies
-            for (let proxy of PROXIES) {
-                try {
-                    const r = await fetch(proxy + encodeURIComponent(url));
-                    if (r.ok) return r.text();
-                } catch(e) { continue; }
-            }
-            throw new Error('Proxies offline');
-        }
+        async function buscar() {
+            const q = document.getElementById('pesquisa').value.trim();
+            if (!q) return;
 
-        async function search() {
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) return;
-
-            const btn = document.getElementById('searchBtn');
-            const loading = document.getElementById('loading');
-            const error = document.getElementById('error');
-            const results = document.getElementById('results');
-
-            btn.disabled = true;
-            loading.style.display = 'block';
-            error.style.display = 'none';
-            results.innerHTML = '';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('lista').innerHTML = '';
 
             try {
-                const url = `${BASE}/pesquisar/${encodeURIComponent(query)}`;
-                const html = await fetchUrl(url);
-                
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Extrair todos os links de anime
-                const allLinks = doc.querySelectorAll('a[href]');
-                const animes = [];
-                const seen = new Set();
+                const r = await fetch('https://api.jikan.moe/v4/anime?q=' + encodeURIComponent(q) + '&limit=12');
+                const d = await r.json();
 
-                allLinks.forEach(a => {
-                    const href = a.href || a.getAttribute('href') || '';
-                    const text = a.textContent?.trim() || '';
-                    
-                    // Filtrar apenas links de anime
-                    if (href.includes('/anime/') && text.length > 2 && text.length < 120 && !seen.has(href)) {
-                        seen.add(href);
-                        animes.push({
-                            href: href,
-                            title: text.substring(0, 100)
-                        });
-                    }
-                });
-
-                // Também tentar pegar cards com títulos em h3
-                doc.querySelectorAll('h3, .title, [class*="title"]').forEach(el => {
-                    const parentLink = el.closest('a');
-                    if (parentLink) {
-                        const href = parentLink.href || '';
-                        const text = el.textContent?.trim() || '';
-                        if (href.includes('/anime/') && text.length > 2 && !seen.has(href)) {
-                            seen.add(href);
-                            animes.push({ href, title: text.substring(0, 100) });
-                        }
-                    }
-                });
-
-                if (animes.length > 0) {
+                if (d.data && d.data.length > 0) {
                     let html = '';
-                    animes.slice(0, 20).forEach(anime => {
-                        const slug = anime.href.replace(BASE, '');
+                    d.data.forEach(a => {
+                        const slug = a.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
                         html += `
-                            <div class="anime-card" onclick="openAnime('${encodeURIComponent(anime.href)}', '${escapeHtml(anime.title)}')">
-                                <h3>${anime.title}</h3>
-                                <p class="link">${slug}</p>
+                            <div class="card">
+                                <h3>${a.title}</h3>
+                                <p class="info">
+                                    <span class="score">⭐ ${a.score || '?'}</span> •
+                                    <span class="eps">🎬 ${a.episodes || '?'} eps</span> •
+                                    ${a.type || ''} • ${a.year || ''}
+                                </p>
+                                <p class="sinopse">${(a.synopsis || '').substring(0, 150)}...</p>
+                                <a href="${ANIMEFIRE}/pesquisar/${encodeURIComponent(slug)}" target="_blank" class="animefire">
+                                    ▶ AnimeFire
+                                </a>
+                                <a href="${GOGO}/search?q=${encodeURIComponent(a.title)}" target="_blank" class="gogo">
+                                    ▶ GogoAnimes
+                                </a>
                             </div>
                         `;
                     });
-                    results.innerHTML = html;
+                    document.getElementById('lista').innerHTML = html;
                 } else {
-                    error.innerHTML = `
-                        Nenhum resultado.<br><br>
-                        <a href="${url}" target="_blank">🔗 Buscar no AnimeFire</a>
-                    `;
-                    error.style.display = 'block';
+                    document.getElementById('lista').innerHTML = '<p class="vazio">Nada encontrado</p>';
                 }
-            } catch (err) {
-                console.error(err);
-                const url = `${BASE}/pesquisar/${encodeURIComponent(query)}`;
-                error.innerHTML = `
-                    Erro: ${err.message}<br><br>
-                    <a href="${url}" target="_blank">🔗 Abrir AnimeFire diretamente</a>
-                `;
-                error.style.display = 'block';
-            } finally {
-                btn.disabled = false;
-                loading.style.display = 'none';
+            } catch(e) {
+                document.getElementById('lista').innerHTML = '<p class="vazio">Erro de conexão</p>';
             }
+
+            document.getElementById('loading').style.display = 'none';
         }
 
-        async function openAnime(encodedUrl, title) {
-            const decodedTitle = decodeURIComponent(title);
-            document.getElementById('modalTitle').textContent = decodedTitle;
-            document.getElementById('epModal').classList.add('active');
-            document.getElementById('epList').innerHTML = '<p class="loading">Carregando...</p>';
-
-            try {
-                const url = decodeURIComponent(encodedUrl);
-                const html = await fetchUrl(url);
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-
-                // Buscar todos os links que parecem episódios
-                const allLinks = doc.querySelectorAll('a[href]');
-                const episodes = [];
-                const seen = new Set();
-
-                allLinks.forEach(a => {
-                    const href = a.href || a.getAttribute('href') || '';
-                    const text = a.textContent?.trim() || '';
-                    
-                    // Padrões de episódios
-                    if ((href.includes('/episodio/') || href.includes('/ep/') || href.includes('/video/')) 
-                        && !seen.has(href)) {
-                        seen.add(href);
-                        episodes.push({ href, title: text || 'Episódio ' + (episodes.length + 1) });
-                    }
-                });
-
-                // Procurar iframe (se for página de filme/ep único)
-                const iframe = doc.querySelector('iframe[src*="player"], iframe[src*="video"], iframe[src*="embed"]');
-                
-                if (iframe?.src) {
-                    // É um filme ou episódio único
-                    playUrl(iframe.src, decodedTitle);
-                    closeModal();
-                    return;
-                }
-
-                if (episodes.length > 0) {
-                    let listHtml = '';
-                    episodes.forEach((ep, i) => {
-                        listHtml += `
-                            <div class="ep-item" onclick="openEpisode('${encodeURIComponent(ep.href)}', '${escapeHtml(ep.title)}')">
-                                <span class="num">Ep ${i + 1}</span>
-                                <span class="title">${ep.title}</span>
-                                <span class="play">▶</span>
-                            </div>
-                        `;
-                    });
-                    document.getElementById('epList').innerHTML = listHtml;
-                } else {
-                    // Gerar links genéricos
-                    document.getElementById('epList').innerHTML = gerarLinks(url, decodedTitle);
-                }
-            } catch (err) {
-                document.getElementById('epList').innerHTML = `
-                    <p class="error">Erro ao carregar episódios</p>
-                    <a href="${decodeURIComponent(encodedUrl)}" target="_blank" class="btn-externo">
-                        🔗 Abrir no AnimeFire
-                    </a>
-                `;
-            }
-        }
-
-        function gerarLinks(baseUrl, title) {
-            let html = '<p style="color:#999;font-size:12px;margin-bottom:10px;">Episódios (links genéricos):</p>';
-            const clean = baseUrl.replace(/\/$/, '');
-            for (let i = 1; i <= 12; i++) {
-                html += `
-                    <div class="ep-item" onclick="openEpisode('${encodeURIComponent(clean + '/episodio-' + i)}', 'Episódio ${i}')">
-                        <span class="num">Ep ${i}</span>
-                        <span class="title">Episódio ${i}</span>
-                        <span class="play">▶</span>
-                    </div>
-                `;
-            }
-            html += `<a href="${baseUrl}" target="_blank" class="btn-externo">🔗 Ver site oficial</a>`;
-            return html;
-        }
-
-        async function openEpisode(encodedUrl, title) {
-            closeModal();
-            document.getElementById('playerTitle').textContent = title;
-            document.getElementById('playerOverlay').classList.add('active');
-            document.getElementById('playerFrame').src = '';
-
-            try {
-                const url = decodeURIComponent(encodedUrl);
-                const html = await fetchUrl(url);
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-
-                const iframe = doc.querySelector('iframe[src*="player"], iframe[src*="video"], iframe[src*="embed"], iframe');
-                if (iframe?.src) {
-                    document.getElementById('playerFrame').src = iframe.src;
-                } else {
-                    document.getElementById('playerFrame').src = url;
-                }
-            } catch (err) {
-                document.getElementById('playerFrame').src = decodeURIComponent(encodedUrl);
-            }
-        }
-
-        function playUrl(src, title) {
-            document.getElementById('playerTitle').textContent = title;
-            document.getElementById('playerOverlay').classList.add('active');
-            document.getElementById('playerFrame').src = src;
-        }
-
-        function closeModal() {
-            document.getElementById('epModal').classList.remove('active');
-        }
-
-        function closePlayer() {
-            document.getElementById('playerOverlay').classList.remove('active');
-            document.getElementById('playerFrame').src = '';
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Enter para buscar
-        document.getElementById('searchInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') search();
+        document.getElementById('pesquisa').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') buscar();
         });
 
-        // Fechar modal ao clicar fora
-        document.getElementById('epModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
+        // Abre com Naruto de exemplo
+        window.onload = function() {
+            document.getElementById('pesquisa').value = 'Naruto';
+            buscar();
+        };
     </script>
 </body>
 </html>
