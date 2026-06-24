@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anime Player</title>
+    <title>AnimeFire Player</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -16,8 +16,14 @@
         h1 {
             color: #e94560;
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-size: 24px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 15px;
         }
         .search-box {
             display: flex;
@@ -49,7 +55,7 @@
             white-space: nowrap;
         }
         button:hover { background: #c73a52; }
-        button:disabled { background: #666; cursor: not-allowed; }
+        button:disabled { background: #555; cursor: not-allowed; }
         .anime-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -71,33 +77,24 @@
         }
         .anime-card h3 {
             color: #eee;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             font-size: 16px;
         }
         .anime-card .info {
             color: #aaa;
             font-size: 12px;
-            margin-bottom: 6px;
-        }
-        .anime-card .score { color: #ffd700; }
-        .anime-card .eps { color: #4ecca3; }
-        .anime-card .synopsis {
-            color: #999;
-            font-size: 11px;
-            line-height: 1.4;
         }
         .loading {
             text-align: center;
             padding: 40px;
             color: #aaa;
-            font-size: 16px;
         }
         .error {
             text-align: center;
             padding: 40px;
             color: #e94560;
         }
-        /* Episodes Modal */
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -116,7 +113,7 @@
             border-radius: 20px 20px 0 0;
             width: 100%;
             max-width: 500px;
-            max-height: 70vh;
+            max-height: 80vh;
             overflow-y: auto;
             padding: 20px;
         }
@@ -130,10 +127,11 @@
             background: #0a0a1a;
             padding-bottom: 10px;
             border-bottom: 1px solid #16213e;
+            z-index: 1;
         }
         .modal-header h2 {
             color: #e94560;
-            font-size: 16px;
+            font-size: 15px;
             flex: 1;
             margin-right: 10px;
         }
@@ -143,7 +141,6 @@
             cursor: pointer;
             background: none;
             border: none;
-            padding: 0;
             line-height: 1;
         }
         .episode-item {
@@ -161,42 +158,55 @@
         .episode-item .num {
             color: #e94560;
             font-weight: bold;
-            font-size: 14px;
-            min-width: 55px;
+            min-width: 50px;
         }
-        .episode-item .title {
-            flex: 1;
-            color: #eee;
-            font-size: 14px;
-        }
+        .episode-item .title { flex: 1; color: #eee; font-size: 13px; }
         .episode-item .play { color: #e94560; font-size: 16px; }
-        .direct-link {
-            display: block;
-            text-align: center;
-            margin-top: 15px;
-            padding: 12px;
-            background: #e94560;
-            color: #fff;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
+        
+        /* Player */
+        .player-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 2000;
+            flex-direction: column;
+        }
+        .player-overlay.active { display: flex; }
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: #1a1a2e;
+        }
+        .player-header span { color: #e94560; cursor: pointer; font-size: 15px; }
+        .player-header .ep-title { color: #eee; font-size: 14px; }
+        iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
         }
     </style>
 </head>
 <body>
 
-    <h1>🍥 Anime Player</h1>
+    <h1>🍥 AnimeFire Player</h1>
+    <p class="subtitle">Busca direta no AnimeFire</p>
 
     <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Buscar anime..." autofocus>
+        <input type="text" id="searchInput" placeholder="Ex: Naruto, One Piece..." autofocus>
         <button id="searchBtn" onclick="searchAnime()">🔍 Buscar</button>
     </div>
 
     <div id="results" class="anime-grid"></div>
-    <div id="loadingMsg" class="loading" style="display:none;">A buscar animes...</div>
+    <div id="loadingMsg" class="loading" style="display:none;">Buscando no AnimeFire...</div>
     <div id="errorMsg" class="error" style="display:none;"></div>
 
-    <!-- Episodes Modal -->
+    <!-- Modal Episódios -->
     <div class="modal-overlay" id="epModal">
         <div class="modal">
             <div class="modal-header">
@@ -204,15 +214,53 @@
                 <button class="close-btn" onclick="closeEpModal()">✕</button>
             </div>
             <div id="epList"></div>
-            <a id="directGogoLink" class="direct-link" target="_blank" style="display:none;">
-                🔗 Abrir site externo
-            </a>
         </div>
     </div>
 
+    <!-- Player -->
+    <div class="player-overlay" id="playerOverlay">
+        <div class="player-header">
+            <span onclick="closePlayer()">← Voltar</span>
+            <span class="ep-title" id="playerTitle">🎬 Player</span>
+            <span></span>
+        </div>
+        <iframe id="playerFrame" allowfullscreen allow="autoplay; fullscreen"></iframe>
+    </div>
+
     <script>
-        const JIKAN = 'https://api.jikan.moe/v4';
-        let currentEpisodes = [];
+        const ANIMEFIRE = 'https://animefire.net';
+        // Usamos um proxy CORS público (alterna se falhar)
+        const PROXIES = [
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?',
+            'https://api.codetabs.com/v1/proxy?quest=',
+        ];
+        let currentProxy = 0;
+
+        async function fetchWithProxy(url) {
+            // Tenta primeiro direto (pode funcionar em alguns navegadores)
+            try {
+                const directRes = await fetch(url);
+                if (directRes.ok) return directRes.text();
+            } catch (e) {
+                // CORS bloqueou, usa proxy
+            }
+
+            // Tenta cada proxy
+            for (let i = 0; i < PROXIES.length; i++) {
+                try {
+                    const proxyUrl = PROXIES[i] + encodeURIComponent(url);
+                    const res = await fetch(proxyUrl);
+                    if (res.ok) {
+                        currentProxy = i;
+                        return res.text();
+                    }
+                } catch (e) {
+                    continue;
+                }
+            }
+            throw new Error('Todos os proxies falharam');
+        }
 
         async function searchAnime() {
             const query = document.getElementById('searchInput').value.trim();
@@ -230,19 +278,36 @@
             results.innerHTML = '';
 
             try {
-                const res = await fetch(`${JIKAN}/anime?q=${encodeURIComponent(query)}&limit=12`);
-                if (!res.ok) throw new Error('API offline');
+                const searchUrl = `${ANIMEFIRE}/pesquisar/${encodeURIComponent(query)}`;
+                const html = await fetchWithProxy(searchUrl);
                 
-                const data = await res.json();
+                // Parsear resultados
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
                 
-                if (data.data && data.data.length > 0) {
-                    renderResults(data.data);
+                const cards = doc.querySelectorAll('.card-anime');
+                
+                if (cards.length === 0) {
+                    // Tenta formato alternativo
+                    const altCards = doc.querySelectorAll('[class*="anime"] a[href*="/anime/"]');
+                    if (altCards.length > 0) {
+                        renderAltResults(altCards);
+                    } else {
+                        error.textContent = 'Nenhum anime encontrado no AnimeFire.';
+                        error.style.display = 'block';
+                    }
                 } else {
-                    error.textContent = 'Nenhum anime encontrado. Tenta outro nome.';
-                    error.style.display = 'block';
+                    renderResults(cards);
                 }
             } catch (err) {
-                error.textContent = 'Erro: ' + err.message + '. Tenta recarregar a página.';
+                console.error(err);
+                error.innerHTML = `
+                    Erro ao acessar AnimeFire.<br><br>
+                    <small>Tenta usar outro navegador ou desativar bloqueadores de anúncio.</small><br><br>
+                    <a href="${ANIMEFIRE}/pesquisar/${encodeURIComponent(query)}" target="_blank" style="color:#e94560;">
+                        🔗 Abrir AnimeFire diretamente
+                    </a>
+                `;
                 error.style.display = 'block';
             } finally {
                 btn.disabled = false;
@@ -251,100 +316,172 @@
             }
         }
 
-        function renderResults(animes) {
+        function renderResults(cards) {
             const container = document.getElementById('results');
             let html = '';
 
-            animes.forEach(anime => {
-                const title = escapeHtml(anime.title);
-                const synopsis = (anime.synopsis || '').substring(0, 180);
-                
-                html += `
-                    <div class="anime-card" onclick="openEpisodes('${title}', ${anime.mal_id})">
-                        <h3>${anime.title}</h3>
-                        <div class="info">
-                            <span class="score">⭐ ${anime.score || '?'}</span> &nbsp;
-                            <span class="eps">🎬 ${anime.episodes || '?'} eps</span> &nbsp;
-                            ${anime.type || ''} &nbsp; ${anime.year || ''}
+            cards.forEach(card => {
+                const link = card.querySelector('a')?.href || '';
+                const title = card.querySelector('h3, .title, [class*="title"]')?.textContent?.trim() || 'Sem título';
+                const img = card.querySelector('img')?.src || '';
+                const eps = card.querySelector('[class*="ep"], .episodes')?.textContent?.trim() || '';
+
+                if (link && link.includes('/anime/')) {
+                    html += `
+                        <div class="anime-card" onclick="openAnime('${encodeURIComponent(link)}', '${escapeHtml(title)}')">
+                            ${img ? `<img src="${img}" style="width:100%;height:160px;object-fit:cover;border-radius:6px;margin-bottom:8px;" alt="">` : ''}
+                            <h3>${title}</h3>
+                            ${eps ? `<p class="info">${eps}</p>` : ''}
                         </div>
-                        ${synopsis ? `<p class="synopsis">${synopsis}...</p>` : ''}
-                    </div>
-                `;
+                    `;
+                }
             });
 
-            container.innerHTML = html;
+            container.innerHTML = html || '<p class="loading">Nada encontrado</p>';
         }
 
-        async function openEpisodes(title, malId) {
-            document.getElementById('epModalTitle').textContent = title;
-            document.getElementById('epModal').classList.add('active');
-            document.getElementById('epList').innerHTML = '<p class="loading" style="padding:20px;">A carregar...</p>';
-            document.getElementById('directGogoLink').style.display = 'none';
+        function renderAltResults(links) {
+            const container = document.getElementById('results');
+            let html = '';
+            const seen = new Set();
 
-            currentEpisodes = [];
+            links.forEach(link => {
+                const href = link.href || link.getAttribute('href') || '';
+                const title = link.textContent?.trim() || link.querySelector('h3')?.textContent?.trim() || 'Sem título';
+
+                if (href.includes('/anime/') && !seen.has(href)) {
+                    seen.add(href);
+                    html += `
+                        <div class="anime-card" onclick="openAnime('${encodeURIComponent(href)}', '${escapeHtml(title)}')">
+                            <h3>${title}</h3>
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = html || '<p class="loading">Nada encontrado</p>';
+        }
+
+        async function openAnime(encodedUrl, title) {
+            document.getElementById('epModalTitle').textContent = decodeURIComponent(title);
+            document.getElementById('epModal').classList.add('active');
+            document.getElementById('epList').innerHTML = '<p class="loading">Carregando episódios...</p>';
 
             try {
-                // Tentativa 1: API ani.zip (gratuita, sem CORS)
-                const aniZipRes = await fetch(`https://api.ani.zip/mappings?anilist_id=${malId}`);
+                const url = decodeURIComponent(encodedUrl);
+                const html = await fetchWithProxy(url);
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Procurar iframes ou links de episódios
+                const iframes = doc.querySelectorAll('iframe[src*="player"], iframe[src*="video"], iframe[src*="embed"]');
                 
-                if (aniZipRes.ok) {
-                    const aniZipData = await aniZipRes.json();
-                    // A ani.zip não tem links diretos, então usamos ela só para confirmar
+                if (iframes.length > 0) {
+                    // É uma página de episódio único - abrir direto
+                    const playerSrc = iframes[0].src;
+                    playDirect(playerSrc, title);
+                    closeEpModal();
+                    return;
                 }
 
-                // Tentativa 2: Construir link GogoAnime diretamente
-                const gogoQuery = title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                // Procurar lista de episódios
+                const epLinks = doc.querySelectorAll('a[href*="/episodio/"], a[href*="/ep/"], .episode-list a, [class*="episodio"] a');
                 
-                // Gerar episódios estimados (1 ao 12) com links do Gogo
-                const fakeEps = [];
-                for (let i = 1; i <= 12; i++) {
-                    fakeEps.push({
-                        number: i,
-                        title: `Episódio ${i}`,
-                        gogoSlug: gogoQuery,
+                if (epLinks.length > 0) {
+                    let html = '';
+                    epLinks.forEach((link, i) => {
+                        const epUrl = link.href || link.getAttribute('href') || '';
+                        const epTitle = link.textContent?.trim() || `Episódio ${i + 1}`;
+                        
+                        if (epUrl) {
+                            html += `
+                                <div class="episode-item" onclick="openEpisode('${encodeURIComponent(epUrl)}', '${escapeHtml(epTitle)}')">
+                                    <span class="num">${epTitle.replace(/[^0-9]/g, '') || i+1}</span>
+                                    <span class="title">${epTitle}</span>
+                                    <span class="play">▶</span>
+                                </div>
+                            `;
+                        }
                     });
+                    document.getElementById('epList').innerHTML = html || gerarEpisodiosFallback(title, url);
+                } else {
+                    document.getElementById('epList').innerHTML = gerarEpisodiosFallback(title, url);
                 }
-                
-                currentEpisodes = fakeEps;
-                renderEpisodes(fakeEps, gogoQuery);
-                
-                // Mostrar link direto
-                const directLink = document.getElementById('directGogoLink');
-                directLink.href = `https://gogoanime3.co/search.html?keyword=${encodeURIComponent(title)}`;
-                directLink.style.display = 'block';
-                directLink.textContent = '🔗 Abrir ' + title + ' no GogoAnime';
-
             } catch (err) {
+                console.error(err);
                 document.getElementById('epList').innerHTML = `
-                    <p class="error" style="padding:20px;">
-                        Não foi possível carregar episódios automaticamente.<br><br>
-                        Usa o botão abaixo para assistir no site externo.
-                    </p>
+                    <p class="error">Erro ao carregar episódios.</p>
+                    <a href="${decodeURIComponent(encodedUrl)}" target="_blank" 
+                       style="display:block;text-align:center;padding:12px;background:#e94560;color:#fff;border-radius:8px;text-decoration:none;margin-top:10px;">
+                        🔗 Abrir no AnimeFire
+                    </a>
                 `;
-                const directLink = document.getElementById('directGogoLink');
-                directLink.href = `https://gogoanime3.co/search.html?keyword=${encodeURIComponent(title)}`;
-                directLink.style.display = 'block';
-                directLink.textContent = '🔗 Assistir no GogoAnime';
             }
         }
 
-        function renderEpisodes(episodes, gogoSlug) {
-            let html = '';
-            episodes.forEach(ep => {
-                const gogoUrl = `https://goload.pro/streaming.php?id=${encodeURIComponent(gogoSlug + '-episode-' + ep.number)}`;
+        function gerarEpisodiosFallback(title, url) {
+            // Gerar links genéricos de 1 a 24
+            let html = '<p style="color:#aaa;font-size:12px;margin-bottom:10px;">Episódios (links genéricos):</p>';
+            const baseUrl = url.replace(/\/$/, '');
+            
+            for (let i = 1; i <= 24; i++) {
+                const epUrl = `${baseUrl}/episodio-${i}`;
                 html += `
-                    <div class="episode-item" onclick="window.open('${gogoUrl}', '_blank')">
-                        <span class="num">Ep ${ep.number}</span>
-                        <span class="title">${ep.title}</span>
+                    <div class="episode-item" onclick="openEpisode('${encodeURIComponent(epUrl)}', 'Episódio ${i}')">
+                        <span class="num">Ep ${i}</span>
+                        <span class="title">Episódio ${i}</span>
                         <span class="play">▶</span>
                     </div>
                 `;
-            });
-            document.getElementById('epList').innerHTML = html || '<p class="loading">Sem episódios disponíveis</p>';
+            }
+            return html;
+        }
+
+        async function openEpisode(encodedUrl, title) {
+            closeEpModal();
+            document.getElementById('playerTitle').textContent = title;
+            document.getElementById('playerOverlay').classList.add('active');
+            document.getElementById('playerFrame').src = '';
+
+            try {
+                const url = decodeURIComponent(encodedUrl);
+                const html = await fetchWithProxy(url);
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Encontrar iframe do player
+                const iframe = doc.querySelector('iframe[src*="player"], iframe[src*="video"], iframe[src*="embed"], iframe[src*="stream"]');
+                
+                if (iframe?.src) {
+                    document.getElementById('playerFrame').src = iframe.src;
+                } else {
+                    // Tenta embed alternativo
+                    const videoSrc = doc.querySelector('video source, video')?.src || 
+                                    doc.querySelector('[data-video]')?.dataset?.video;
+                    if (videoSrc) {
+                        document.getElementById('playerFrame').src = videoSrc;
+                    } else {
+                        document.getElementById('playerFrame').src = url;
+                    }
+                }
+            } catch (err) {
+                document.getElementById('playerFrame').src = decodeURIComponent(encodedUrl);
+            }
+        }
+
+        function playDirect(src, title) {
+            document.getElementById('playerTitle').textContent = title;
+            document.getElementById('playerOverlay').classList.add('active');
+            document.getElementById('playerFrame').src = src;
         }
 
         function closeEpModal() {
             document.getElementById('epModal').classList.remove('active');
+        }
+
+        function closePlayer() {
+            document.getElementById('playerOverlay').classList.remove('active');
+            document.getElementById('playerFrame').src = '';
         }
 
         function escapeHtml(text) {
@@ -353,12 +490,11 @@
             return div.innerHTML;
         }
 
-        // Fechar modal ao clicar fora
+        // Fechar modais ao clicar fora
         document.getElementById('epModal').addEventListener('click', function(e) {
             if (e.target === this) closeEpModal();
         });
 
-        // Enter para buscar
         document.getElementById('searchInput').addEventListener('keydown', function(e) {
             if (e.key === 'Enter') searchAnime();
         });
