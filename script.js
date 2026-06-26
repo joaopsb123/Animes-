@@ -1,9 +1,94 @@
-// =============================================
-// 🐺 CORD - REDE SOCIAL COMPLETA v2.0
-// JavaScript Principal
-// =============================================
+/* =============================================
+   🐺 CORD v3.0 - script.js COMPLETO
+   CloudBinary + Firebase Auth + 7 Sistemas Novos
+   ============================================= */
 
-// ============ INICIALIZAÇÃO FIREBASE ============
+// ============ CONFIGURAÇÃO CLOUDBINARY ============
+const CB_CONFIG = {
+    apiKey: "963113554475727",
+    secretKey: "62tTY6eg2SX2exA5K5b24u5paYE",
+    projectId: "cord-app"
+};
+
+// ============ INICIALIZAÇÃO ============
+let CB = null;
+let db = null;
+
+// Inicializar CloudBinary
+async function initCloudBinary() {
+    try {
+        CB = new CloudBinary(CB_CONFIG);
+        await CB.initialize();
+        console.log('✅ CloudBinary conectado!');
+        
+        // Criar coleções iniciais se não existirem
+        await CB.createCollection('users', { 
+            username: 'string', email: 'string', password: 'string',
+            balance: 'number', nitro: 'boolean', badges: 'array',
+            inventory: 'array', friends: 'array', friendCode: 'number',
+            bio: 'string', roles: 'array', isOnline: 'boolean',
+            lastSeen: 'timestamp', createdAt: 'timestamp',
+            servers: 'array', effects: 'array'
+        });
+        
+        await CB.createCollection('servers', {
+            name: 'string', ownerId: 'string', members: 'array',
+            invites: 'array', roles: 'array', isPublic: 'boolean',
+            createdAt: 'timestamp', template: 'string'
+        });
+        
+        await CB.createCollection('channels', {
+            serverId: 'string', name: 'string',
+            createdAt: 'timestamp', type: 'string'
+        });
+        
+        await CB.createCollection('messages', {
+            serverId: 'string', channelId: 'string',
+            autor: 'string', texto: 'string', userId: 'string',
+            isBot: 'boolean', isSystem: 'boolean',
+            hasNitro: 'boolean', badges: 'array',
+            reactions: 'map', timestamp: 'timestamp'
+        });
+        
+        await CB.createCollection('bots', {
+            name: 'string', desc: 'string', token: 'string',
+            ownerId: 'string', active: 'boolean',
+            servers: 'array', commands: 'map',
+            createdAt: 'timestamp', prefix: 'string'
+        });
+        
+        await CB.createCollection('dms', {
+            channelId: 'string', autor: 'string',
+            texto: 'string', userId: 'string',
+            timestamp: 'timestamp'
+        });
+        
+        await CB.createCollection('economy', {
+            userId: 'string', job: 'string', salary: 'number',
+            lastWork: 'timestamp', transactions: 'array'
+        });
+        
+        await CB.createCollection('music', {
+            serverId: 'string', url: 'string',
+            title: 'string', addedBy: 'string',
+            timestamp: 'timestamp'
+        });
+        
+        await CB.createCollection('calls', {
+            serverId: 'string', channelId: 'string',
+            participants: 'array', active: 'boolean',
+            startedAt: 'timestamp'
+        });
+        
+        db = CB;
+        return true;
+    } catch (e) {
+        console.warn('CloudBinary em modo fallback:', e.message);
+        return false;
+    }
+}
+
+// Firebase Auth (mantido)
 const firebaseConfig = {
     apiKey: "AIzaSyCnRAOY08ABtG87T2ioDM4lzYgDB6q3rBw",
     authDomain: "cord-c6f05.firebaseapp.com",
@@ -15,8 +100,6 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
-db.enablePersistence().catch(() => {});
 
 // ============ VARIÁVEIS GLOBAIS ============
 let currentUser = null;
@@ -25,1168 +108,923 @@ let currentChannel = null;
 let unsubMessages = null;
 let currentView = 'chat';
 let activeDM = null;
-let currentProfileUserId = null;
-let currentFriendsTab = 'all';
+let currentCall = null;
+let audioContext = null;
 
-// =============================================
-// AUTENTICAÇÃO
-// =============================================
-
-function switchAuthTab(tab) {
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
-    document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-    document.getElementById('tab-' + tab).classList.add('active');
-    document.getElementById('login-error').style.display = 'none';
-    document.getElementById('reg-error').style.display = 'none';
-}
-
-async function handleLogin(event) {
-    event.preventDefault();
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    const errorElement = document.getElementById('login-error');
-    errorElement.style.display = 'none';
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-    } catch (error) {
-        errorElement.textContent = translateAuthError(error.code);
-        errorElement.style.display = 'block';
+// ============ INICIALIZAÇÃO ============
+(async () => {
+    const cbReady = await initCloudBinary();
+    if (!cbReady) {
+        console.log('Usando armazenamento local como fallback');
     }
-}
-
-async function handleRegister(event) {
-    event.preventDefault();
-    const username = document.getElementById('reg-username').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
-    const errorElement = document.getElementById('reg-error');
-    errorElement.style.display = 'none';
-    if (username.length < 3) { errorElement.textContent = 'Nome muito curto (mín. 3).'; errorElement.style.display = 'block'; return; }
-    if (password.length < 6) { errorElement.textContent = 'Senha muito curta (mín. 6).'; errorElement.style.display = 'block'; return; }
-    try {
-        const cred = await auth.createUserWithEmailAndPassword(email, password);
-        await cred.user.updateProfile({ displayName: username });
-        await db.collection('users').doc(cred.user.uid).set({
-            username, email, balance: 100, lastDaily: null, bio: '', inventory: [], friends: [],
-            friendCode: generateFriendCode(), nitro: false, nitroExpiry: null, badges: [], roles: [],
-            isOnline: true, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-        });
-    } catch (error) {
-        errorElement.textContent = translateAuthError(error.code);
-        errorElement.style.display = 'block';
-    }
-}
-
-async function loginWithGoogle() {
-    try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        const result = await auth.signInWithPopup(provider);
-        const user = result.user;
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        if (!userDoc.exists) {
-            await db.collection('users').doc(user.uid).set({
-                username: user.displayName || 'Usuário Google', email: user.email,
-                balance: 100, lastDaily: null, bio: '', inventory: [], friends: [],
-                friendCode: generateFriendCode(), nitro: false, badges: [], roles: [],
-                isOnline: true, createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastSeen: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        } else {
-            await db.collection('users').doc(user.uid).update({ lastSeen: firebase.firestore.FieldValue.serverTimestamp(), isOnline: true });
-        }
-    } catch (error) { showToast('Erro ao entrar com Google.', true); }
-}
-
-function logout() {
-    if (currentUser) db.collection('users').doc(currentUser.uid).update({ isOnline: false, lastSeen: firebase.firestore.FieldValue.serverTimestamp() });
-    if (unsubMessages) { unsubMessages(); unsubMessages = null; }
-    currentServer = null; currentChannel = null; activeDM = null;
-    auth.signOut();
-}
-
-function translateAuthError(code) {
-    const m = {
-        'auth/user-not-found': 'Email não encontrado.', 'auth/wrong-password': 'Senha incorreta.',
-        'auth/email-already-in-use': 'Email já registado.', 'auth/invalid-email': 'Email inválido.',
-        'auth/weak-password': 'Senha fraca (mín. 6).', 'auth/too-many-requests': 'Muitas tentativas.',
-        'auth/network-request-failed': 'Erro de rede.'
-    };
-    return m[code] || 'Erro. Tenta novamente.';
-}
-
-function generateFriendCode() { return Math.floor(1000 + Math.random() * 9000); }
-
-// =============================================
-// OBSERVADOR DE AUTENTICAÇÃO
-// =============================================
+})();
 
 auth.onAuthStateChanged(async (user) => {
     if (user) {
         currentUser = user;
         document.getElementById('auth-container').style.display = 'none';
         document.getElementById('app-container').style.display = 'flex';
-        updateUserInterface(user);
+        updateUI(user);
         loadServers();
-        loadAllPanels();
-        loadDMPanels();
-        addProfileStyles();
-        try { await db.collection('users').doc(user.uid).update({ isOnline: true, lastSeen: firebase.firestore.FieldValue.serverTimestamp() }); } catch (e) {}
+        loadAllData();
+        setupRealtime();
     } else {
         currentUser = null;
         document.getElementById('auth-container').style.display = 'flex';
         document.getElementById('app-container').style.display = 'none';
-        if (unsubMessages) { unsubMessages(); unsubMessages = null; }
-        currentServer = null; currentChannel = null; activeDM = null;
     }
 });
 
-function updateUserInterface(user) {
-    const displayName = user.displayName || user.email.split('@')[0];
-    const initial = displayName[0].toUpperCase();
-    const avatarColor = stringToColor(displayName);
-    ['avatar-top', 'avatar-footer'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) { el.textContent = initial; el.style.background = avatarColor; }
-    });
-    document.getElementById('username-footer').textContent = displayName;
-    document.getElementById('topbar-title').textContent = displayName;
+// ============ AUTENTICAÇÃO ============
+function switchAuthTab(t) {
+    document.querySelectorAll('.auth-tab').forEach(e => e.classList.remove('active'));
+    document.getElementById('form-login').style.display = t === 'login' ? 'block' : 'none';
+    document.getElementById('form-register').style.display = t === 'register' ? 'block' : 'none';
+    document.getElementById(`tab-${t}`).classList.add('active');
 }
 
-// =============================================
-// NAVEGAÇÃO DE VIEWS
-// =============================================
-
-function switchView(view) {
-    currentView = view;
-    document.querySelectorAll('.view-container').forEach(el => el.style.display = 'none');
-    const selectedView = document.getElementById(view + '-view');
-    if (selectedView) selectedView.style.display = view === 'chat' ? 'flex' : 'block';
-    
-    // Atualizar navegação rápida
-    document.querySelectorAll('.quick-nav-item').forEach(item => item.classList.remove('active'));
-    const navItem = document.querySelector(`[data-nav="${view}"]`);
-    if (navItem) navItem.classList.add('active');
-    
-    // Atualizar header da sidebar
-    if (currentServer && view === 'chat') {
-        document.getElementById('sidebar-server-name').textContent = '🐺 ' + (getServerName(currentServer) || 'Servidor');
-    }
-    
-    switch (view) {
-        case 'friends': loadFriendsPanel(); break;
-        case 'dashboard': loadBotsPanel(); break;
-        case 'nitro': loadNitroPanel(); break;
-        case 'members': loadMembersPanel(); break;
-        case 'settings': loadSettingsPanel(); break;
-    }
-}
-
-async function getServerName(serverId) {
+async function handleLogin(e) {
+    e.preventDefault();
     try {
-        const doc = await db.collection('servers').doc(serverId).get();
-        return doc.exists ? doc.data().name : null;
-    } catch (e) { return null; }
+        await auth.signInWithEmailAndPassword(
+            document.getElementById('login-email').value,
+            document.getElementById('login-password').value
+        );
+    } catch (err) {
+        document.getElementById('login-error').textContent = tradErr(err.code);
+        document.getElementById('login-error').style.display = 'block';
+    }
 }
 
-function loadAllPanels() {
-    loadFriendsPanel();
-    loadBotsPanel();
-    loadNitroPanel();
-    loadMembersPanel();
-    loadSettingsPanel();
-}
-
-// =============================================
-// SERVIDORES (NOVA INTERFACE)
-// =============================================
-
-function loadServers() {
-    if (!currentUser) return;
-    db.collection('servers').where('members', 'array-contains', currentUser.uid)
-        .onSnapshot((snapshot) => {
-            const serverIconsList = document.getElementById('server-icons-list');
-            serverIconsList.innerHTML = '';
-            
-            // Botão Início
-            const homeBtn = document.createElement('button');
-            homeBtn.className = 'server-icon-btn' + (!currentServer ? ' active' : '');
-            homeBtn.innerHTML = '🏠';
-            homeBtn.title = 'Início';
-            homeBtn.onclick = () => { currentServer = null; currentChannel = null; activeDM = null;
-                document.getElementById('chat-box').innerHTML = '<div class="welcome-screen"><div class="welcome-icon">🐺</div><h2>Bem-vindo ao Cord!</h2><p>Seleciona um servidor à esquerda.</p></div>';
-                document.getElementById('channel-list').innerHTML = '<p class="placeholder-text">Seleciona um servidor</p>';
-                document.getElementById('sidebar-server-name').textContent = '🐺 Cord';
-                document.getElementById('current-channel-name').textContent = 'Seleciona um canal';
-                if (unsubMessages) { unsubMessages(); unsubMessages = null; }
-                switchView('chat');
-            };
-            serverIconsList.appendChild(homeBtn);
-            
-            snapshot.forEach((doc) => {
-                const server = doc.data();
-                const btn = document.createElement('button');
-                btn.className = 'server-icon-btn' + (currentServer === doc.id ? ' active' : '');
-                btn.textContent = (server.name || 'S')[0].toUpperCase();
-                btn.style.background = stringToColor(server.name);
-                btn.title = server.name;
-                btn.onclick = () => selectServer(doc.id, server.name);
-                serverIconsList.appendChild(btn);
+async function handleRegister(e) {
+    e.preventDefault();
+    const u = document.getElementById('reg-username').value.trim();
+    const em = document.getElementById('reg-email').value.trim();
+    const p = document.getElementById('reg-password').value;
+    try {
+        const cred = await auth.createUserWithEmailAndPassword(em, p);
+        await cred.user.updateProfile({ displayName: u });
+        
+        // Salvar no CloudBinary
+        if (db) {
+            await db.insert('users', {
+                id: cred.user.uid,
+                username: u, email: em, balance: 100,
+                nitro: false, badges: [], inventory: [],
+                friends: [], friendCode: Math.floor(1000+Math.random()*9000),
+                bio: '', roles: [], isOnline: true,
+                lastSeen: new Date(), createdAt: new Date(),
+                servers: [], effects: []
             });
-        });
+        }
+    } catch (err) {
+        document.getElementById('reg-error').textContent = tradErr(err.code);
+        document.getElementById('reg-error').style.display = 'block';
+    }
 }
 
-function selectServer(serverId, serverName) {
-    currentServer = serverId;
-    currentChannel = null;
-    activeDM = null;
-    document.getElementById('sidebar-server-name').textContent = '🐺 ' + serverName;
-    document.getElementById('current-channel-name').textContent = 'Seleciona um canal';
-    document.getElementById('channel-list').innerHTML = '<p class="placeholder-text">Carregando canais...</p>';
-    document.getElementById('chat-box').innerHTML = `<div class="welcome-screen"><div class="welcome-icon">💬</div><h2>${escapeHtml(serverName)}</h2><p>Seleciona um canal para começar.</p></div>`;
-    if (unsubMessages) { unsubMessages(); unsubMessages = null; }
-    loadChannels(serverId);
-    loadMembersSidePanel();
-    switchView('chat');
-    if (window.innerWidth <= 768) toggleSidebar();
-}
-
-function loadChannels(serverId) {
-    db.collection('servers').doc(serverId).collection('channels').orderBy('createdAt')
-        .onSnapshot((snapshot) => {
-            const channelList = document.getElementById('channel-list');
-            channelList.innerHTML = '';
-            if (snapshot.empty) { channelList.innerHTML = '<p class="placeholder-text">Nenhum canal. Cria um!</p>'; return; }
-            snapshot.forEach((doc) => {
-                const channel = doc.data();
-                const div = document.createElement('div');
-                div.className = 'channel-item';
-                div.innerHTML = `<span class="hash-icon">#</span> ${escapeHtml(channel.name)}`;
-                div.onclick = () => selectChannel(serverId, doc.id, channel.name);
-                if (currentChannel === doc.id) div.classList.add('active');
-                channelList.appendChild(div);
-            });
-        });
-}
-
-function selectChannel(serverId, channelId, channelName) {
-    currentChannel = channelId;
-    activeDM = null;
-    document.getElementById('current-channel-name').textContent = channelName;
-    if (unsubMessages) unsubMessages();
-    unsubMessages = db.collection('servers').doc(serverId).collection('channels').doc(channelId)
-        .collection('messages').orderBy('timestamp', 'asc')
-        .onSnapshot((snapshot) => {
-            const chatBox = document.getElementById('chat-box');
-            chatBox.innerHTML = '';
-            if (snapshot.empty) {
-                chatBox.innerHTML = `<div class="welcome-screen"><div class="welcome-icon">📭</div><h2>#${escapeHtml(channelName)}</h2><p>Nenhuma mensagem. Sê o primeiro!</p></div>`;
-                return;
+async function loginWithGoogle() {
+    const p = new firebase.auth.GoogleAuthProvider();
+    try {
+        const r = await auth.signInWithPopup(p);
+        if (db) {
+            const exists = await db.findOne('users', { id: r.user.uid });
+            if (!exists) {
+                await db.insert('users', {
+                    id: r.user.uid,
+                    username: r.user.displayName || 'User',
+                    email: r.user.email, balance: 100,
+                    nitro: false, badges: [], inventory: [],
+                    friends: [], friendCode: Math.floor(1000+Math.random()*9000),
+                    bio: '', roles: [], isOnline: true,
+                    lastSeen: new Date(), createdAt: new Date()
+                });
             }
-            snapshot.forEach((doc) => renderMessage(doc.data(), doc.id));
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-    if (window.innerWidth <= 768) toggleSidebar();
+        }
+    } catch (e) { toast('Erro Google', true); }
 }
 
-// =============================================
-// MENSAGENS
-// =============================================
+function logout() {
+    if (currentUser && db) {
+        db.update('users', { id: currentUser.uid }, { isOnline: false, lastSeen: new Date() });
+    }
+    auth.signOut();
+}
 
-function renderMessage(msg, msgId) {
-    const chatBox = document.getElementById('chat-box');
-    const welcomeScreen = chatBox.querySelector('.welcome-screen');
-    if (welcomeScreen) chatBox.innerHTML = '';
+function tradErr(c) {
+    const m = {
+        'auth/user-not-found':'Email não encontrado',
+        'auth/wrong-password':'Senha incorreta',
+        'auth/email-already-in-use':'Email já registado',
+        'auth/invalid-email':'Email inválido',
+        'auth/weak-password':'Senha fraca',
+        'auth/too-many-requests':'Muitas tentativas'
+    };
+    return m[c]||'Erro';
+}
+
+// ============ UI ============
+function updateUI(user) {
+    const n = user.displayName || user.email?.split('@')[0] || 'User';
+    const i = n[0].toUpperCase();
+    const c = strColor(n);
+    document.getElementById('avatar-top').textContent = i;
+    document.getElementById('avatar-top').style.background = c;
+    document.getElementById('avatar-footer').textContent = i;
+    document.getElementById('avatar-footer').style.background = c;
+    document.getElementById('username-footer').textContent = n;
+    document.getElementById('topbar-title').textContent = n;
+}
+
+function switchView(v) {
+    currentView = v;
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message';
-    messageDiv._messageData = msg;
+    const view = document.getElementById(v + '-view');
+    if (view) view.classList.add('active');
     
-    const avatarColor = msg.isBot ? '#6366f1' : (msg.isSystem ? '#52525b' : stringToColor(msg.autor));
-    const avatarLetter = (msg.autor || '?')[0].toUpperCase();
-    const nitroNameClass = msg.hasNitro ? ' nitro-name' : '';
-    const nitroFrameClass = msg.hasNitro ? ' nitro-glow' : '';
+    const navs = document.querySelectorAll('.nav-item');
+    const idx = {chat:0, friends:1, nitro:2, bots:3, economy:4, music:5, calls:6};
+    if (navs[idx[v]]) navs[idx[v]].classList.add('active');
     
-    let badgesHtml = '';
-    if (msg.isBot) badgesHtml += '<span class="badge-tag bot">BOT</span>';
-    if (msg.isSystem) badgesHtml += '<span class="badge-tag system">SYS</span>';
-    if (msg.badges && msg.badges.includes('nitro')) badgesHtml += '<span class="badge-tag nitro">NITRO</span>';
-    if (msg.badges && msg.badges.includes('vip')) badgesHtml += '<span class="badge-tag vip">VIP</span>';
-    if (msg.badges && msg.badges.includes('og')) badgesHtml += '<span class="badge-tag og">OG</span>';
-    if (msg.badges && msg.badges.includes('botmaster')) badgesHtml += '<span class="badge-tag botmaster">BOT MASTER</span>';
+    if (v === 'economy') loadEconomy();
+    if (v === 'music') loadMusic();
+    if (v === 'calls') loadCalls();
+    if (v === 'bots') loadBots();
+    if (v === 'nitro') loadNitro();
+    if (v === 'friends') loadFriends();
+}
+
+// ============ SERVIDORES ============
+async function loadServers() {
+    if (!db || !currentUser) return;
+    const servers = await db.find('servers', { members: { $in: [currentUser.uid] } });
+    const list = document.getElementById('guilds-list');
+    list.innerHTML = '<div class="guild-item home-guild active" onclick="goHome()" title="Início">🐺</div><div class="guild-separator"></div>';
     
-    let timeStr = '';
-    if (msg.timestamp) timeStr = msg.timestamp.toDate().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
-    
-    const reactions = msg.reactions || {};
-    let reactionsHtml = '';
-    Object.entries(reactions).forEach(([emoji, users]) => {
-        const isActive = Array.isArray(users) && users.includes(currentUser?.uid);
-        reactionsHtml += `<span class="reaction-badge ${isActive ? 'active' : ''}" onclick="toggleReaction('${msgId}', '${emoji}')">${emoji} ${(users||[]).length}</span>`;
+    servers.forEach(s => {
+        const d = document.createElement('div');
+        d.className = 'guild-item' + (currentServer === s.id ? ' active' : '');
+        d.textContent = (s.name||'S')[0].toUpperCase();
+        d.style.background = strColor(s.name);
+        d.title = s.name;
+        d.onclick = () => selectServer(s.id, s.name);
+        list.appendChild(d);
     });
-    if (reactionsHtml) reactionsHtml = `<div class="reactions-row">${reactionsHtml}</div>`;
+}
+
+function goHome() {
+    currentServer = null; currentChannel = null; activeDM = null;
+    document.getElementById('chat-box').innerHTML = '<div class="welcome"><h1>🐺 Bem-vindo!</h1><p>Seleciona um servidor.</p></div>';
+    document.getElementById('channel-list').innerHTML = '';
+    document.getElementById('sidebar-server-name').textContent = '🐺 Cord';
+    switchView('chat');
+}
+
+async function selectServer(id, name) {
+    currentServer = id; currentChannel = null; activeDM = null;
+    document.getElementById('sidebar-server-name').textContent = name;
+    document.getElementById('current-channel-name').textContent = 'Seleciona canal';
     
-    const clickableName = (msg.userId && msg.userId !== 'system')
-        ? `<span class="message-username ${nitroNameClass}" onclick="openUserProfile('${msg.userId}')" title="Ver perfil">${escapeHtml(msg.autor)}</span>`
-        : `<span class="message-username ${nitroNameClass}">${escapeHtml(msg.autor)}</span>`;
+    const channels = await db.find('channels', { serverId: id });
+    const list = document.getElementById('channel-list');
+    list.innerHTML = '';
+    channels.forEach(ch => {
+        const d = document.createElement('div');
+        d.className = 'channel-item' + (currentChannel === ch.id ? ' active' : '');
+        d.textContent = ch.name;
+        d.onclick = () => selectChannel(id, ch.id, ch.name);
+        list.appendChild(d);
+    });
     
-    messageDiv.innerHTML = `
-        <div class="message-avatar" style="background: ${avatarColor};" onclick="openUserProfile('${msg.userId || ''}')">
-            <div class="avatar-frame ${nitroFrameClass}"></div>${avatarLetter}
-        </div>
-        <div class="message-content">
-            <div class="message-header">${clickableName}${badgesHtml}<span class="message-time">${timeStr}</span></div>
-            <div class="message-text">${formatMessageText(escapeHtml(msg.texto))}</div>${reactionsHtml}
-        </div>`;
-    chatBox.appendChild(messageDiv);
+    document.getElementById('chat-box').innerHTML = `<div class="welcome"><h1>${esc(name)}</h1><p>Seleciona um canal.</p></div>`;
+    loadMembers();
+    switchView('chat');
+}
+
+async function selectChannel(sid, cid, name) {
+    currentChannel = cid; activeDM = null;
+    document.getElementById('current-channel-name').textContent = name;
+    
+    if (unsubMessages) unsubMessages();
+    
+    const messages = await db.find('messages', { 
+        serverId: sid, channelId: cid 
+    }, { sort: { timestamp: 1 } });
+    
+    renderMessages(messages);
+    
+    // Polling para novas mensagens (a cada 1s)
+    unsubMessages = setInterval(async () => {
+        const newMsgs = await db.find('messages', {
+            serverId: sid, channelId: cid
+        }, { sort: { timestamp: 1 } });
+        renderMessages(newMsgs);
+    }, 1000);
+}
+
+function renderMessages(msgs) {
+    const box = document.getElementById('chat-box');
+    box.innerHTML = '';
+    if (!msgs || msgs.length === 0) {
+        box.innerHTML = '<div class="welcome"><p>Sem mensagens. Sê o primeiro!</p></div>';
+        return;
+    }
+    msgs.forEach(msg => {
+        const d = document.createElement('div');
+        d.className = 'message';
+        const color = msg.isBot ? '#5865f2' : strColor(msg.autor);
+        const letter = (msg.autor||'?')[0].toUpperCase();
+        const badges = [];
+        if (msg.isBot) badges.push('<span class="badge bot">BOT</span>');
+        if (msg.badges?.includes('nitro')) badges.push('<span class="badge nitro">NITRO</span>');
+        if (msg.badges?.includes('vip')) badges.push('<span class="badge vip">VIP</span>');
+        
+        d.innerHTML = `
+            <div class="msg-avatar" style="background:${color}" onclick="openProfile('${msg.userId}')">${letter}</div>
+            <div class="msg-content">
+                <div class="msg-header">
+                    <span class="msg-username" onclick="openProfile('${msg.userId}')">${esc(msg.autor)}</span>
+                    ${badges.join('')}
+                    <span class="msg-time">${msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : ''}</span>
+                </div>
+                <div class="msg-text">${fmtText(esc(msg.texto))}</div>
+            </div>`;
+        box.appendChild(d);
+    });
+    box.scrollTop = box.scrollHeight;
 }
 
 async function sendMsg() {
-    const input = document.getElementById('msg-input');
-    const texto = input.value.trim();
-    if (!texto || !currentUser) return;
-    if (activeDM) { await sendDirectMessage(activeDM, texto); }
-    else if (currentServer && currentChannel) { await sendChannelMessage(texto); }
-    else { showToast('Seleciona um canal ou DM!', true); return; }
-    input.value = ''; input.style.height = 'auto';
+    const texto = document.getElementById('msg-input').value.trim();
+    if (!texto || !currentUser || !currentServer || !currentChannel) return;
+    
+    const user = await db.findOne('users', { id: currentUser.uid });
+    
+    await db.insert('messages', {
+        serverId: currentServer, channelId: currentChannel,
+        autor: currentUser.displayName || 'User', texto,
+        userId: currentUser.uid, isBot: false, isSystem: false,
+        hasNitro: user?.nitro || false, badges: user?.badges || [],
+        reactions: {}, timestamp: new Date()
+    });
+    
+    document.getElementById('msg-input').value = '';
+    handleCmd(texto);
 }
 
-async function sendChannelMessage(texto) {
-    try {
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        const userData = userDoc.data() || {};
-        await db.collection('servers').doc(currentServer).collection('channels').doc(currentChannel)
-            .collection('messages').add({
-                autor: currentUser.displayName || currentUser.email.split('@')[0], texto,
-                userId: currentUser.uid, isBot: false, isSystem: false,
-                hasNitro: userData.nitro || false, badges: userData.badges || [],
-                reactions: {}, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        handleCommands(texto);
-    } catch (error) { showToast('Erro ao enviar.', true); }
-}
-
-function handleCommands(texto) {
-    const lower = texto.toLowerCase().trim();
-    const commands = {
-        '!ping': () => sendSystemMessage('🏓 Pong!'),
-        '!hora': () => sendSystemMessage('🕐 ' + new Date().toLocaleString('pt-PT')),
-        '!dado': () => sendSystemMessage('🎲 ' + (Math.floor(Math.random()*6)+1)),
-        '!moeda': () => sendSystemMessage('🪙 ' + (Math.random()>0.5?'Cara':'Coroa')),
-        '!coins': async () => { const d = await db.collection('users').doc(currentUser.uid).get(); sendSystemMessage('💰 ' + ((d.data()||{}).balance||0) + ' 🪙'); },
-        '!rank': async () => {
-            const s = await db.collection('users').orderBy('balance','desc').limit(5).get();
-            let m = '🏆 Ranking:'; s.forEach((d,i) => m += `\n${i+1}. ${d.data().username} - ${d.data().balance||0} 🪙`);
-            sendSystemMessage(m);
+function handleCmd(t) {
+    const l = t.toLowerCase().trim();
+    const cmds = {
+        '!ping': () => sendSys('🏓 Pong!'),
+        '!hora': () => sendSys('🕐 ' + new Date().toLocaleString('pt-PT')),
+        '!coins': async () => {
+            const u = await db.findOne('users', { id: currentUser.uid });
+            sendSys('💰 ' + (u?.balance||0) + ' 🪙');
         },
-        '!help': () => sendSystemMessage('📖 Comandos: !ping !hora !dado !moeda !coins !rank !serverinfo !help')
+        '!help': () => sendSys('📖 !ping !hora !coins !rank !work !play !call !help')
     };
-    if (commands[lower]) commands[lower]();
-    checkCustomBots(texto);
+    if (cmds[l]) cmds[l]();
+    checkBots(t);
 }
 
-async function checkCustomBots(texto) {
-    if (!currentServer) return;
-    const bots = await db.collection('bots').where('servers', 'array-contains', currentServer).where('active','==',true).get();
-    const lower = texto.toLowerCase().trim();
-    bots.forEach(d => {
-        const b = d.data();
-        if (b.commands && b.commands[lower]) setTimeout(() => sendBotMessage(b.commands[lower], b.name, d.id), 300);
+async function sendSys(t) {
+    await db.insert('messages', {
+        serverId: currentServer, channelId: currentChannel,
+        autor: 'Sistema', texto: t, userId: 'system',
+        isBot: false, isSystem: true, hasNitro: false,
+        badges: [], reactions: {}, timestamp: new Date()
     });
 }
 
-function sendSystemMessage(t) {
-    if (!currentServer || !currentChannel) return;
-    db.collection('servers').doc(currentServer).collection('channels').doc(currentChannel)
-        .collection('messages').add({ autor:'Sistema', texto:t, userId:'system', isBot:false, isSystem:true, hasNitro:false, badges:[], reactions:{}, timestamp:firebase.firestore.FieldValue.serverTimestamp() });
+async function checkBots(t) {
+    const bots = await db.find('bots', { servers: { $in: [currentServer] }, active: true });
+    const l = t.toLowerCase().trim();
+    bots.forEach(b => {
+        if (b.commands?.[l]) {
+            setTimeout(() => {
+                db.insert('messages', {
+                    serverId: currentServer, channelId: currentChannel,
+                    autor: b.name, texto: b.commands[l], userId: b.id,
+                    isBot: true, isSystem: false, hasNitro: false,
+                    badges: [], reactions: {}, timestamp: new Date()
+                });
+            }, 400);
+        }
+    });
 }
 
-function sendBotMessage(t, n, bid) {
-    if (!currentServer || !currentChannel) return;
-    db.collection('servers').doc(currentServer).collection('channels').doc(currentChannel)
-        .collection('messages').add({ autor:n, texto:t, userId:bid, isBot:true, isSystem:false, hasNitro:false, badges:[], reactions:{}, timestamp:firebase.firestore.FieldValue.serverTimestamp() });
+// ============ MEMBROS ============
+async function loadMembers() {
+    if (!currentServer) return;
+    const server = await db.findOne('servers', { id: currentServer });
+    if (!server) return;
+    const list = document.getElementById('members-list');
+    list.innerHTML = '';
+    
+    for (const uid of server.members || []) {
+        const u = await db.findOne('users', { id: uid });
+        if (!u) continue;
+        const d = document.createElement('div');
+        d.className = 'member-item';
+        d.innerHTML = `
+            <div class="member-avatar" style="background:${strColor(u.username)}">${(u.username||'?')[0]}</div>
+            <span>${esc(u.username)} ${uid===server.ownerId?'👑':''}</span>`;
+        d.onclick = () => openProfile(uid);
+        list.appendChild(d);
+    }
 }
-
-async function toggleReaction(msgId, emoji) {
-    if (!currentServer || !currentChannel || !currentUser) return;
-    const ref = db.collection('servers').doc(currentServer).collection('channels').doc(currentChannel).collection('messages').doc(msgId);
-    const doc = await ref.get();
-    if (!doc.exists) return;
-    const data = doc.data(), r = data.reactions || {};
-    if (!r[emoji]) r[emoji] = [];
-    const idx = r[emoji].indexOf(currentUser.uid);
-    if (idx >= 0) r[emoji].splice(idx, 1); else r[emoji].push(currentUser.uid);
-    if (r[emoji].length === 0) delete r[emoji];
-    await ref.update({ reactions: r });
-}
-
-// =============================================
-// MEMBROS LATERAL NO CHAT
-// =============================================
 
 function toggleMembersPanel() {
-    const panel = document.getElementById('members-panel');
-    panel.style.display = panel.style.display === 'none' ? 'flex' : 'none';
+    const p = document.getElementById('members-panel');
+    p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+    if (p.style.display === 'flex') loadMembers();
 }
 
-function showMembersPanel() {
-    document.getElementById('members-panel').style.display = 'flex';
-    loadMembersSidePanel();
-}
-
-async function loadMembersSidePanel() {
-    if (!currentServer) return;
-    const doc = await db.collection('servers').doc(currentServer).get();
-    if (!doc.exists) return;
-    const members = doc.data().members || [];
-    const list = document.getElementById('members-side-list');
-    list.innerHTML = '';
-    for (const uid of members) {
-        const u = await db.collection('users').doc(uid).get();
-        const ud = u.data() || {};
-        const div = document.createElement('div');
-        div.className = 'member-side-item';
-        div.onclick = () => openUserProfile(uid);
-        div.innerHTML = `<div class="member-side-avatar" style="background:${stringToColor(ud.username||uid)};">${(ud.username||'?')[0]}</div><span>${escapeHtml(ud.username||'?')}</span>${uid===doc.data().ownerId?' 👑':''}`;
-        list.appendChild(div);
-    }
-}
-
-// =============================================
-// AMIGOS E DM
-// =============================================
-
-function switchFriendsTab(tab) {
-    currentFriendsTab = tab;
-    document.querySelectorAll('#friends-view .panel-tab').forEach(t => t.classList.remove('active'));
-    event?.target?.classList.add('active');
-    loadFriendsPanel();
-}
-
-async function loadFriendsPanel() {
-    if (!currentUser) return;
-    const userDoc = await db.collection('users').doc(currentUser.uid).get();
-    const userData = userDoc.data() || {};
-    const friends = userData.friends || [];
-    document.getElementById('my-friend-code').textContent = '#' + (userData.friendCode || '----');
+// ============ PERFIS ============
+async function openProfile(uid) {
+    if (!uid || uid === 'system') return;
+    const u = await db.findOne('users', { id: uid });
+    if (!u) return;
     
-    const friendsList = document.getElementById('friends-list');
-    friendsList.innerHTML = '';
+    const isOwn = uid === currentUser?.uid;
+    const isFriend = (u.friends||[]).includes(currentUser?.uid);
     
-    // Filtrar por tab
-    let filteredFriends = friends;
-    if (currentFriendsTab === 'online') {
-        // Simplificado: mostra todos por enquanto
-        filteredFriends = friends;
-    }
-    
-    if (currentFriendsTab === 'add') {
-        document.getElementById('friends-add-card').style.display = 'block';
-    } else {
-        document.getElementById('friends-add-card').style.display = 'none';
-    }
-    
-    if (filteredFriends.length === 0) {
-        friendsList.innerHTML = '<p class="placeholder-text">Nenhum amigo encontrado.</p>';
-    } else {
-        for (const fid of filteredFriends) {
-            const fDoc = await db.collection('users').doc(fid).get();
-            const fd = fDoc.data() || {};
-            const div = document.createElement('div');
-            div.className = 'list-item';
-            div.innerHTML = `
-                <div class="list-item-avatar" style="background:${stringToColor(fd.username||'?')};" onclick="openUserProfile('${fid}')">${(fd.username||'?')[0]}</div>
-                <div class="list-item-info" onclick="openUserProfile('${fid}')">
-                    <div class="list-item-name">${escapeHtml(fd.username||'?')}</div>
-                    <div class="list-item-sub">${fd.isOnline ? '🟢 Online' : '⚫ Offline'} ${fd.nitro?'⭐':''}</div>
-                </div>
-                <div class="list-item-actions">
-                    <button class="btn btn-xs btn-primary" onclick="openDM('${fid}')">💬</button>
-                    <button class="btn btn-xs btn-danger" onclick="removeFriend('${fid}')">❌</button>
-                </div>`;
-            friendsList.appendChild(div);
-        }
-    }
-    loadDMList(friends);
-}
-
-async function loadDMList(friends) {
-    const dmList = document.getElementById('dm-list');
-    const dmChannelsList = document.getElementById('dm-channels-list');
-    dmList.innerHTML = '';
-    if (dmChannelsList) dmChannelsList.innerHTML = '';
-    if (!friends || friends.length === 0) {
-        dmList.innerHTML = '<p class="placeholder-text">Adiciona amigos.</p>';
-        return;
-    }
-    for (const fid of friends) {
-        const fDoc = await db.collection('users').doc(fid).get();
-        const fd = fDoc.data() || {};
-        const div = document.createElement('div');
-        div.className = 'list-item';
-        div.onclick = () => openDM(fid);
-        div.innerHTML = `<div class="list-item-avatar" style="background:${stringToColor(fd.username||'?')};">${(fd.username||'?')[0]}</div><div class="list-item-info"><div class="list-item-name">${escapeHtml(fd.username||'?')}</div></div>`;
-        dmList.appendChild(div);
-        
-        if (dmChannelsList) {
-            const chDiv = document.createElement('div');
-            chDiv.className = 'channel-item';
-            chDiv.innerHTML = `💬 ${escapeHtml(fd.username||'?')}`;
-            chDiv.onclick = () => openDM(fid);
-            dmChannelsList.appendChild(chDiv);
-        }
-    }
-}
-
-function loadDMPanels() { if (currentUser) loadFriendsPanel(); }
-
-async function addFriend() {
-    const code = document.getElementById('friend-code-input').value.replace('#','').trim();
-    const res = document.getElementById('add-friend-result');
-    if (!code) { res.textContent = 'Insere um código.'; res.style.color='var(--red)'; return; }
-    const snap = await db.collection('users').where('friendCode','==',parseInt(code)).limit(1).get();
-    if (snap.empty) { res.textContent = 'Código inválido.'; res.style.color='var(--red)'; return; }
-    const fid = snap.docs[0].id;
-    if (fid === currentUser.uid) { res.textContent = 'Não podes adicionar-te!'; res.style.color='var(--red)'; return; }
-    const uDoc = await db.collection('users').doc(currentUser.uid).get();
-    if ((uDoc.data().friends||[]).includes(fid)) { res.textContent = 'Já são amigos!'; res.style.color='var(--yellow)'; return; }
-    await db.collection('users').doc(currentUser.uid).update({ friends: firebase.firestore.FieldValue.arrayUnion(fid) });
-    await db.collection('users').doc(fid).update({ friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
-    res.textContent = '✅ Adicionado!'; res.style.color='var(--green)';
-    document.getElementById('friend-code-input').value = '';
-    showToast('Amigo adicionado! 🎉');
-    loadFriendsPanel();
-}
-
-function openDM(friendId) {
-    activeDM = friendId; currentChannel = null;
-    if (unsubMessages) unsubMessages();
-    const dmId = [currentUser.uid, friendId].sort().join('_');
-    document.getElementById('current-channel-name').textContent = '💬 DM';
-    document.getElementById('sidebar-server-name').textContent = '💬 Mensagem Privada';
-    unsubMessages = db.collection('dms').doc(dmId).collection('messages').orderBy('timestamp','asc')
-        .onSnapshot(s => {
-            const box = document.getElementById('chat-box');
-            box.innerHTML = '';
-            if (s.empty) { box.innerHTML = '<div class="welcome-screen"><div class="welcome-icon">💬</div><h2>Conversa Privada</h2><p>Escreve algo!</p></div>'; return; }
-            s.forEach(d => renderMessage(d.data(), d.id));
-            box.scrollTop = box.scrollHeight;
-        });
-    switchView('chat');
-}
-
-async function sendDirectMessage(fid, texto) {
-    const uDoc = await db.collection('users').doc(currentUser.uid).get();
-    const dmId = [currentUser.uid, fid].sort().join('_');
-    await db.collection('dms').doc(dmId).collection('messages').add({
-        autor: currentUser.displayName || currentUser.email.split('@')[0], texto, userId: currentUser.uid,
-        hasNitro: (uDoc.data()||{}).nitro||false, badges: (uDoc.data()||{}).badges||[],
-        reactions: {}, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-}
-
-async function removeFriend(fid) {
-    if (!confirm('Remover amigo?')) return;
-    await db.collection('users').doc(currentUser.uid).update({ friends: firebase.firestore.FieldValue.arrayRemove(fid) });
-    await db.collection('users').doc(fid).update({ friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) });
-    showToast('Amigo removido.');
-    loadFriendsPanel();
-}
-
-// =============================================
-// PERFIS
-// =============================================
-
-async function openUserProfile(userId) {
-    if (!userId || userId === 'system') return;
-    currentProfileUserId = userId;
-    const doc = await db.collection('users').doc(userId).get();
-    if (!doc.exists) { showToast('Utilizador não encontrado.', true); return; }
-    const data = doc.data();
-    const isOwn = userId === currentUser?.uid;
-    const isFriend = (data.friends || []).includes(currentUser?.uid);
-    showProfileModal(buildProfileHTML(data, userId, isOwn, isFriend));
-    loadProfileBadges(userId, data);
-    loadMutualFriends(userId, data);
-    loadMutualServers(userId, data);
-}
-
-function buildProfileHTML(data, userId, isOwn, isFriend) {
-    const username = data.username || '?';
-    const bio = data.bio || 'Sem bio.';
-    const nitro = data.nitro || false;
-    const balance = data.balance || 0;
-    const friendCode = data.friendCode || '----';
-    const created = data.createdAt ? formatDate(data.createdAt.toDate()) : '?';
-    const seen = data.lastSeen ? formatLastSeen(data.lastSeen.toDate()) : '?';
-    const color = stringToColor(username);
-    
-    let btns = '';
-    if (isOwn) btns = '<button class="btn btn-sm btn-primary" onclick="closeProfileModal();switchView(\'settings\');">✏️ Editar</button>';
-    else if (isFriend) btns = `<button class="btn btn-sm btn-primary" onclick="openDM('${userId}');closeProfileModal();">💬 DM</button><button class="btn btn-sm btn-danger" onclick="removeFriend('${userId}');closeProfileModal();">❌ Remover</button>`;
-    else btns = `<button class="btn btn-sm btn-primary" onclick="addFriendById('${userId}');">➕ Adicionar</button>`;
-    
-    return `
-        <div class="profile-modal-content">
-            <div class="profile-header" style="background:linear-gradient(180deg,${color} 0%,var(--bg-secondary) 70%);">
-                <div class="profile-avatar-container">
-                    <div class="profile-avatar" style="background:${color};">${username[0]}</div>
-                    <div class="profile-status-dot ${data.isOnline?'online':'offline'}"></div>
-                </div>
-                <h2 class="profile-username ${nitro?'nitro-name':''}">${escapeHtml(username)}</h2>
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal profile-modal">
+            <button class="profile-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+            <div class="profile-header" style="background:linear-gradient(180deg,${strColor(u.username)} 0%,var(--bg-secondary) 70%);">
+                <div class="profile-avatar" style="background:${strColor(u.username)}">${(u.username||'?')[0]}</div>
+                <h2 style="color:#fff;margin-top:8px;">${esc(u.username)}</h2>
+                ${u.nitro ? '<span class="badge nitro">NITRO</span>' : ''}
             </div>
             <div class="profile-body">
-                <div class="profile-section"><h4>📝 Bio</h4><p>${escapeHtml(bio)}</p></div>
-                <div class="profile-section"><h4>📊 Stats</h4><div class="profile-stats"><div class="stat-item"><span class="stat-icon">💰</span><span class="stat-value">${balance}</span><span class="stat-label">Coins</span></div><div class="stat-item"><span class="stat-icon">#</span><span class="stat-value">${friendCode}</span><span class="stat-label">Código</span></div></div></div>
-                <div class="profile-section"><h4>🏅 Badges</h4><div id="profile-badges-list">...</div></div>
-                <div class="profile-section"><h4>👥 Amigos em Comum</h4><div id="profile-mutual-friends">...</div></div>
-                <div class="profile-section"><h4>🌐 Servidores em Comum</h4><div id="profile-mutual-servers">...</div></div>
-                <div class="profile-section"><h4>📅 Datas</h4><div class="profile-dates"><div class="date-item"><span>📆 Membro desde:</span><span>${created}</span></div><div class="date-item"><span>🟢 Visto:</span><span>${seen}</span></div></div></div>
-                <div class="profile-actions">${btns}</div>
+                <div class="profile-section"><h4>Bio</h4><p>${esc(u.bio||'Sem bio')}</p></div>
+                <div class="profile-section"><h4>Stats</h4><p>💰 ${u.balance||0} 🪙 | #${u.friendCode}</p></div>
+                <div class="profile-actions">
+                    ${isOwn ? '<button class="btn btn-sm btn-primary" onclick="switchView(\'settings\');this.closest(\'.modal-overlay\').remove()">Editar</button>' : ''}
+                    ${!isOwn && isFriend ? `<button class="btn btn-sm btn-primary" onclick="openDM('${uid}');this.closest('.modal-overlay').remove()">💬 DM</button>` : ''}
+                    ${!isOwn && !isFriend ? `<button class="btn btn-sm btn-primary" onclick="addFriendById('${uid}');this.closest('.modal-overlay').remove()">➕ Adicionar</button>` : ''}
+                </div>
             </div>
         </div>`;
-}
-
-function showProfileModal(content) {
-    let modal = document.getElementById('profile-modal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'profile-modal';
-        modal.className = 'modal-overlay';
-        modal.innerHTML = '<div class="modal profile-modal-wrapper"><button class="profile-close-btn" onclick="closeProfileModal()">✕</button><div id="profile-modal-content"></div></div>';
-        document.body.appendChild(modal);
-        modal.addEventListener('click', e => { if (e.target === modal) closeProfileModal(); });
-    }
-    document.getElementById('profile-modal-content').innerHTML = content;
-    modal.style.display = 'flex';
-}
-
-function closeProfileModal() {
-    const modal = document.getElementById('profile-modal');
-    if (modal) modal.style.display = 'none';
-    currentProfileUserId = null;
-}
-
-async function loadProfileBadges(uid, data) {
-    const el = document.getElementById('profile-badges-list');
-    if (!el) return;
-    const badges = [];
-    if (data.nitro) badges.push('⭐ Nitro');
-    if ((data.badges||[]).includes('vip')) badges.push('💎 VIP');
-    if ((data.badges||[]).includes('og')) badges.push('👑 OG');
-    if ((data.inventory||[]).includes('effect_glow')) badges.push('✨ Glow');
-    el.innerHTML = badges.length ? badges.map(b => `<span class="badge-item">${b}</span>`).join(' ') : '<span style="color:var(--text-muted);font-size:11px;">Nenhum.</span>';
-}
-
-async function loadMutualFriends(uid, data) {
-    const el = document.getElementById('profile-mutual-friends');
-    if (!el || !currentUser) return;
-    const myDoc = await db.collection('users').doc(currentUser.uid).get();
-    const mutual = (data.friends||[]).filter(f => (myDoc.data().friends||[]).includes(f));
-    if (!mutual.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:11px;">Nenhum.</span>'; return; }
-    let html = '';
-    for (const fid of mutual.slice(0,5)) {
-        const f = await db.collection('users').doc(fid).get();
-        const fd = f.data()||{};
-        html += `<div class="mutual-item" onclick="openUserProfile('${fid}');closeProfileModal();"><div class="mutual-avatar" style="background:${stringToColor(fd.username||'?')};">${(fd.username||'?')[0]}</div><span>${escapeHtml(fd.username||'?')}</span></div>`;
-    }
-    el.innerHTML = html;
-}
-
-async function loadMutualServers(uid, data) {
-    const el = document.getElementById('profile-mutual-servers');
-    if (!el || !currentUser) return;
-    const targetSnap = await db.collection('servers').where('members','array-contains',uid).get();
-    const targetIds = targetSnap.docs.map(d=>d.id);
-    const mySnap = await db.collection('servers').where('members','array-contains',currentUser.uid).get();
-    const mutual = mySnap.docs.filter(d=>targetIds.includes(d.id));
-    if (!mutual.length) { el.innerHTML = '<span style="color:var(--text-muted);font-size:11px;">Nenhum.</span>'; return; }
-    el.innerHTML = mutual.slice(0,5).map(d => `<div class="mutual-item" onclick="selectServer('${d.id}','${escapeHtml(d.data().name)}');closeProfileModal();"><span class="server-dot" style="background:var(--green);"></span>${escapeHtml(d.data().name)}</div>`).join('');
+    document.body.appendChild(modal);
+    modal.onclick = e => { if (e.target === modal) modal.remove(); };
 }
 
 async function addFriendById(fid) {
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    if ((doc.data().friends||[]).includes(fid)) { showToast('Já são amigos!'); return; }
-    await db.collection('users').doc(currentUser.uid).update({ friends: firebase.firestore.FieldValue.arrayUnion(fid) });
-    await db.collection('users').doc(fid).update({ friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
-    showToast('Amigo adicionado! 🎉');
-    closeProfileModal();
-    loadFriendsPanel();
-}
-
-function formatDate(d) { const m=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']; return `${d.getDate()} ${m[d.getMonth()]} ${d.getFullYear()}`; }
-function formatLastSeen(d) { const diff=Math.floor((new Date()-d)/1000); if(diff<60)return 'Agora'; if(diff<3600)return `Há ${Math.floor(diff/60)}min`; if(diff<86400)return `Há ${Math.floor(diff/3600)}h`; return formatDate(d); }
-function addProfileStyles() {
-    if (document.getElementById('profile-styles')) return;
-    const s = document.createElement('style'); s.id='profile-styles';
-    s.textContent = `.profile-modal-wrapper{max-width:500px;padding:0;overflow:hidden;max-height:90vh;overflow-y:auto;}.profile-close-btn{position:absolute;top:12px;right:12px;z-index:10;background:rgba(0,0,0,0.5);color:#fff;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;}.profile-header{padding:30px 20px 20px;text-align:center;}.profile-avatar{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:#fff;border:4px solid var(--bg-secondary);margin:0 auto;}.profile-status-dot{position:absolute;bottom:2px;right:2px;width:16px;height:16px;border-radius:50%;border:3px solid var(--bg-secondary);}.profile-status-dot.online{background:var(--green);}.profile-status-dot.offline{background:#747f8d;}.profile-username{font-size:22px;font-weight:700;color:var(--text-bright);margin-top:8px;}.profile-body{padding:16px 20px;}.profile-section{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border-subtle);}.profile-section h4{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;}.profile-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;}.stat-item{background:var(--bg-tertiary);border-radius:8px;padding:10px;text-align:center;}.stat-value{font-size:16px;font-weight:700;color:var(--text-bright);}.badge-item{display:inline-flex;align-items:center;gap:4px;background:var(--bg-tertiary);padding:4px 8px;border-radius:12px;margin:2px;font-size:11px;}.mutual-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;}.mutual-item:hover{background:var(--bg-hover);}.mutual-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;}.date-item{display:flex;justify-content:space-between;padding:5px 0;color:var(--text-muted);font-size:12px;}.date-item span:last-child{color:var(--text-bright);font-weight:500;}.profile-actions{display:flex;gap:8px;flex-wrap:wrap;padding-top:8px;}`;
-    document.head.appendChild(s);
-}
-
-// =============================================
-// NITRO E LOJA
-// =============================================
-
-async function loadNitroPanel() {
-    if (!currentUser) return;
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    const data = doc.data() || {};
-    document.getElementById('nitro-balance').textContent = data.balance || 0;
+    const u = await db.findOne('users', { id: currentUser.uid });
+    const friends = u?.friends || [];
+    if (friends.includes(fid)) return toast('Já são amigos!');
     
-    document.getElementById('profile-effects').innerHTML = `
-        <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">✨ Glow</div></div><span class="shop-item-price">300 🪙</span><button class="btn btn-xs btn-primary" onclick="buyEffect('glow',300)">Comprar</button></div>
-        <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">🌈 Arco-Íris</div></div><span class="shop-item-price">400 🪙</span><button class="btn btn-xs btn-primary" onclick="buyEffect('rainbow',400)">Comprar</button></div>
-        <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">💎 Cristal</div></div><span class="shop-item-price">600 🪙</span><button class="btn btn-xs btn-primary" onclick="buyEffect('crystal',600)">Comprar</button></div>`;
+    await db.update('users', { id: currentUser.uid }, { friends: [...friends, fid] });
+    const f = await db.findOne('users', { id: fid });
+    await db.update('users', { id: fid }, { friends: [...(f?.friends||[]), currentUser.uid] });
+    toast('Amigo adicionado! 🎉');
+    loadFriends();
+}
+
+// ============ AMIGOS E DM ============
+async function loadFriends() {
+    if (!currentUser) return;
+    const u = await db.findOne('users', { id: currentUser.uid });
+    document.getElementById('my-code').textContent = '#' + (u?.friendCode || '----');
+    
+    const friends = u?.friends || [];
+    const list = document.getElementById('friends-list');
+    const dmList = document.getElementById('dm-list');
+    list.innerHTML = ''; dmList.innerHTML = '';
+    
+    for (const fid of friends) {
+        const f = await db.findOne('users', { id: fid });
+        if (!f) continue;
+        list.innerHTML += `<div class="shop-item"><span>${esc(f.username)}</span><span>${f.isOnline?'🟢':'⚫'}</span><button class="btn btn-xs btn-primary" onclick="openDM('${fid}')">💬</button></div>`;
+        dmList.innerHTML += `<div class="shop-item" onclick="openDM('${fid}')" style="cursor:pointer;"><span>${esc(f.username)}</span><span>💬</span></div>`;
+    }
+}
+
+async function addFriend() {
+    const code = document.getElementById('friend-input').value.replace('#','').trim();
+    if (!code) return;
+    const u = await db.findOne('users', { friendCode: parseInt(code) });
+    if (!u) { document.getElementById('friend-result').textContent = 'Código inválido'; return; }
+    if (u.id === currentUser.uid) { document.getElementById('friend-result').textContent = 'Não podes!'; return; }
+    
+    const me = await db.findOne('users', { id: currentUser.uid });
+    if ((me?.friends||[]).includes(u.id)) { document.getElementById('friend-result').textContent = 'Já são!'; return; }
+    
+    await db.update('users', { id: currentUser.uid }, { friends: [...(me?.friends||[]), u.id] });
+    await db.update('users', { id: u.id }, { friends: [...(u.friends||[]), currentUser.uid] });
+    document.getElementById('friend-result').textContent = '✅ Adicionado!';
+    document.getElementById('friend-input').value = '';
+    toast('Amigo adicionado!');
+    loadFriends();
+}
+
+async function openDM(fid) {
+    activeDM = fid; currentChannel = null;
+    if (unsubMessages) clearInterval(unsubMessages);
+    document.getElementById('current-channel-name').textContent = '💬 DM';
+    
+    const msgs = await db.find('dms', { 
+        $or: [
+            { userId: currentUser.uid, channelId: fid },
+            { userId: fid, channelId: currentUser.uid }
+        ]
+    }, { sort: { timestamp: 1 } });
+    
+    const box = document.getElementById('chat-box');
+    box.innerHTML = '';
+    msgs.forEach(m => {
+        box.innerHTML += `<div style="padding:4px;"><b>${esc(m.autor)}:</b> ${esc(m.texto)}</div>`;
+    });
+    box.scrollTop = box.scrollHeight;
+    switchView('chat');
+}
+
+async function sendDM(fid, texto) {
+    await db.insert('dms', {
+        channelId: fid, autor: currentUser.displayName || 'User',
+        texto, userId: currentUser.uid, timestamp: new Date()
+    });
+}
+
+// ============ SISTEMA 1: NITRO MELHORADO ============
+async function loadNitro() {
+    if (!currentUser) return;
+    const u = await db.findOne('users', { id: currentUser.uid });
+    document.getElementById('balance').textContent = u?.balance || 0;
+    
+    document.getElementById('effects-shop').innerHTML = `
+        <div class="shop-item"><span>✨ Glow</span><span>300 🪙</span><button class="btn btn-xs btn-primary" onclick="buyEffect('glow',300)">Comprar</button></div>
+        <div class="shop-item"><span>🌈 Arco-Íris</span><span>500 🪙</span><button class="btn btn-xs btn-primary" onclick="buyEffect('rainbow',500)">Comprar</button></div>
+        <div class="shop-item"><span>💎 Cristal</span><span>700 🪙</span><button class="btn btn-xs btn-primary" onclick="buyEffect('crystal',700)">Comprar</button></div>
+        <div class="shop-item"><span>🔥 Fogo</span><span>600 🪙</span><button class="btn btn-xs btn-primary" onclick="buyEffect('fire',600)">Comprar</button></div>`;
     
     document.getElementById('badges-shop').innerHTML = `
-        <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">💎 VIP</div></div><span class="shop-item-price">800 🪙</span><button class="btn btn-xs btn-primary" onclick="buyBadge('vip',800)">Comprar</button></div>
-        <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">👑 OG</div></div><span class="shop-item-price">1500 🪙</span><button class="btn btn-xs btn-primary" onclick="buyBadge('og',1500)">Comprar</button></div>
-        <div class="shop-item"><div class="shop-item-info"><div class="shop-item-name">🤖 Bot Master</div></div><span class="shop-item-price">1000 🪙</span><button class="btn btn-xs btn-primary" onclick="buyBadge('botmaster',1000)">Comprar</button></div>`;
+        <div class="shop-item"><span>💎 VIP</span><span>800 🪙</span><button class="btn btn-xs btn-primary" onclick="buyBadge('vip',800)">Comprar</button></div>
+        <div class="shop-item"><span>👑 OG</span><span>1500 🪙</span><button class="btn btn-xs btn-primary" onclick="buyBadge('og',1500)">Comprar</button></div>
+        <div class="shop-item"><span>🤖 Bot Master</span><span>1000 🪙</span><button class="btn btn-xs btn-primary" onclick="buyBadge('botmaster',1000)">Comprar</button></div>
+        <div class="shop-item"><span>🎵 DJ</span><span>1200 🪙</span><button class="btn btn-xs btn-primary" onclick="buyBadge('dj',1200)">Comprar</button></div>`;
 }
 
 async function buyNitro() {
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    if ((doc.data().balance||0) < 500) return showToast('Precisas de 500 🪙!', true);
-    if (doc.data().nitro) return showToast('Já tens Nitro!', true);
-    await db.collection('users').doc(currentUser.uid).update({ nitro: true, balance: firebase.firestore.FieldValue.increment(-500) });
-    showToast('Nitro ativado! ⭐');
-    loadNitroPanel();
+    const u = await db.findOne('users', { id: currentUser.uid });
+    if ((u?.balance||0) < 500) return toast('Sem moedas!', true);
+    if (u?.nitro) return toast('Já tens Nitro!');
+    await db.update('users', { id: currentUser.uid }, { nitro: true, balance: (u.balance||0) - 500 });
+    toast('Nitro ativado! ⭐');
+    loadNitro();
 }
 
-async function buyEffect(type, price) {
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    const data = doc.data() || {};
-    if ((data.balance||0) < price) return showToast('Sem moedas!', true);
-    if ((data.inventory||[]).includes('effect_'+type)) return showToast('Já tens!', true);
-    await db.collection('users').doc(currentUser.uid).update({ balance: firebase.firestore.FieldValue.increment(-price), inventory: firebase.firestore.FieldValue.arrayUnion('effect_'+type) });
-    showToast('Comprado! ✨');
-    loadNitroPanel();
+async function buyEffect(e, p) {
+    const u = await db.findOne('users', { id: currentUser.uid });
+    if ((u?.balance||0) < p) return toast('Sem moedas!', true);
+    if ((u?.effects||[]).includes(e)) return toast('Já tens!');
+    await db.update('users', { id: currentUser.uid }, { 
+        balance: (u.balance||0) - p, 
+        effects: [...(u?.effects||[]), e] 
+    });
+    toast('Comprado! ✨');
+    loadNitro();
 }
 
-async function buyBadge(type, price) {
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    const data = doc.data() || {};
-    if ((data.balance||0) < price) return showToast('Sem moedas!', true);
-    if ((data.badges||[]).includes(type)) return showToast('Já tens!', true);
-    await db.collection('users').doc(currentUser.uid).update({ balance: firebase.firestore.FieldValue.increment(-price), badges: firebase.firestore.FieldValue.arrayUnion(type) });
-    showToast('Comprado! 🏅');
-    loadNitroPanel();
+async function buyBadge(b, p) {
+    const u = await db.findOne('users', { id: currentUser.uid });
+    if ((u?.balance||0) < p) return toast('Sem moedas!', true);
+    if ((u?.badges||[]).includes(b)) return toast('Já tens!');
+    await db.update('users', { id: currentUser.uid }, { 
+        balance: (u.balance||0) - p, 
+        badges: [...(u?.badges||[]), b] 
+    });
+    toast('Comprado! 🏅');
+    loadNitro();
 }
 
 async function dailyReward() {
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    const data = doc.data() || {};
+    const u = await db.findOne('users', { id: currentUser.uid });
+    const last = u?.lastDaily ? new Date(u.lastDaily) : null;
     const now = new Date();
-    const last = data.lastDaily ? data.lastDaily.toDate() : null;
-    if (last && now.toDateString() === last.toDateString()) return showToast('Já recebeste hoje!', true);
-    const reward = 50 + Math.floor(Math.random() * 51);
-    await db.collection('users').doc(currentUser.uid).update({ balance: firebase.firestore.FieldValue.increment(reward), lastDaily: firebase.firestore.FieldValue.serverTimestamp() });
-    showToast('🎁 +' + reward + ' 🪙!');
-    loadNitroPanel();
-}
-
-// =============================================
-// MEMBROS
-// =============================================
-
-async function loadMembersPanel() {
-    if (!currentServer) { document.getElementById('members-list').innerHTML = '<p class="placeholder-text">Seleciona um servidor.</p>'; return; }
-    const doc = await db.collection('servers').doc(currentServer).get();
-    if (!doc.exists) return;
-    const data = doc.data();
-    const invites = data.invites || [];
-    const link = invites.length > 0 ? `https://cord.app/invite/${invites[invites.length-1]}` : 'Nenhum convite gerado';
-    document.getElementById('invite-link-display').textContent = link;
-    
-    const members = data.members || [];
-    const list = document.getElementById('members-list');
-    list.innerHTML = '';
-    for (const uid of members) {
-        const u = await db.collection('users').doc(uid).get();
-        const ud = u.data() || {};
-        const div = document.createElement('div');
-        div.className = 'list-item';
-        div.onclick = () => openUserProfile(uid);
-        div.innerHTML = `<div class="list-item-avatar" style="background:${stringToColor(ud.username||uid)};">${(ud.username||'?')[0]}</div><div class="list-item-info"><div class="list-item-name">${escapeHtml(ud.username||'?')} ${uid===data.ownerId?'👑':''}</div></div>`;
-        list.appendChild(div);
-    }
-    
-    const roles = data.roles || [];
-    const rolesList = document.getElementById('roles-list');
-    rolesList.innerHTML = roles.length ? roles.map(r => `<div class="shop-item"><span style="color:${r.color};">● ${escapeHtml(r.name)}</span><button class="btn btn-xs btn-primary" onclick="assignRole('${r.id}')">Atribuir</button></div>`).join('') : '<p class="placeholder-text">Nenhum cargo.</p>';
-}
-
-async function generateInvite() {
-    if (!currentServer) return showToast('Seleciona servidor!', true);
-    const code = Math.random().toString(36).substring(2,8).toUpperCase();
-    await db.collection('servers').doc(currentServer).update({ invites: firebase.firestore.FieldValue.arrayUnion(code) });
-    document.getElementById('invite-link-display').textContent = `https://cord.app/invite/${code}`;
-    showToast('Convite: ' + code);
-}
-
-function copyInviteLink() {
-    const link = document.getElementById('invite-link-display').textContent;
-    if (link.includes('Nenhum')) return showToast('Gera um convite!', true);
-    navigator.clipboard.writeText(link).then(() => showToast('Link copiado! 📋'));
-}
-
-async function joinServerByInvite() {
-    const code = document.getElementById('join-invite-code').value.trim().toUpperCase();
-    if (!code) return;
-    const snap = await db.collection('servers').where('invites','array-contains',code).limit(1).get();
-    if (snap.empty) return showToast('Inválido!', true);
-    const doc = snap.docs[0];
-    if ((doc.data().members||[]).includes(currentUser.uid)) return showToast('Já estás!');
-    await db.collection('servers').doc(doc.id).update({ members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
-    document.getElementById('join-invite-code').value = '';
-    showToast('Entraste! 🎉');
-    loadServers();
-}
-
-async function addRole() {
-    if (!currentServer) return;
-    const name = prompt('Nome do cargo:');
-    if (!name) return;
-    const color = prompt('Cor (ex: #ff0000):', '#6366f1');
-    const doc = await db.collection('servers').doc(currentServer).get();
-    const roles = (doc.data().roles||[]);
-    roles.push({ id: 'role_'+Date.now(), name, color });
-    await db.collection('servers').doc(currentServer).update({ roles });
-    loadMembersPanel();
-}
-
-async function assignRole(rid) {
-    const uid = prompt('ID do membro:');
-    if (!uid) return;
-    await db.collection('users').doc(uid).update({ roles: firebase.firestore.FieldValue.arrayUnion(rid) });
-    showToast('Cargo atribuído!');
-}
-
-// =============================================
-// DESCUBRIR SERVIDORES
-// =============================================
-
-function showDiscoverModal() {
-    document.getElementById('discover-modal').style.display = 'flex';
-    searchPublicServers();
-}
-
-async function searchPublicServers() {
-    const query = (document.getElementById('discover-search')?.value || '').toLowerCase();
-    const snap = await db.collection('servers').where('isPublic','==',true).limit(20).get();
-    const results = document.getElementById('discover-results');
-    results.innerHTML = '';
-    
-    let servers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    if (query) servers = servers.filter(s => s.name.toLowerCase().includes(query));
-    
-    if (!servers.length) { results.innerHTML = '<p class="placeholder-text">Nenhum servidor encontrado.</p>'; return; }
-    
-    servers.forEach(s => {
-        const div = document.createElement('div');
-        div.className = 'shop-item';
-        div.innerHTML = `<div class="shop-item-info"><div class="shop-item-name">${escapeHtml(s.name)}</div><div class="shop-item-desc">${(s.members||[]).length} membros</div></div><button class="btn btn-xs btn-primary" onclick="joinPublicServer('${s.id}')">Entrar</button>`;
-        results.appendChild(div);
+    if (last && last.toDateString() === now.toDateString()) return toast('Já recebeste hoje!', true);
+    const r = 50 + Math.floor(Math.random()*51);
+    await db.update('users', { id: currentUser.uid }, { 
+        balance: (u?.balance||0) + r, 
+        lastDaily: now 
     });
+    toast('🎁 +' + r + ' 🪙');
+    loadNitro();
 }
 
-async function joinPublicServer(serverId) {
-    const doc = await db.collection('servers').doc(serverId).get();
-    if (!doc.exists) return;
-    if ((doc.data().members||[]).includes(currentUser.uid)) return showToast('Já estás!');
-    await db.collection('servers').doc(serverId).update({ members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid) });
-    showToast('Entraste! 🎉');
-    closeModal('discover-modal');
-    loadServers();
-}
-
-// =============================================
-// BOTS (SISTEMA MELHORADO)
-// =============================================
-
-function loadBotsPanel() { loadMyBots(); loadBotServerSelects(); }
-
-function loadMyBots() {
+// ============ SISTEMA 2: ECONOMIA AVANÇADA ============
+async function loadEconomy() {
     if (!currentUser) return;
-    db.collection('bots').where('ownerId','==',currentUser.uid).onSnapshot(snap => {
-        const list = document.getElementById('my-bots-list');
-        list.innerHTML = '';
-        if (snap.empty) { list.innerHTML = '<p class="placeholder-text">Nenhum bot.</p>'; return; }
-        snap.forEach(doc => {
-            const bot = doc.data();
-            const serversCount = (bot.servers || []).length;
-            const div = document.createElement('div');
-            div.className = 'shop-item';
-            div.innerHTML = `
-                <div class="shop-item-info">
-                    <div class="shop-item-name">🤖 ${escapeHtml(bot.name)}</div>
-                    <div class="shop-item-desc">🟢 Ativo • ${serversCount} servidor(es)</div>
-                    <div class="token-display" onclick="copyBotToken('${doc.id}',this)">${(bot.token||'').substring(0,15)}...<span class="copied-tooltip">Copiado!</span></div>
-                </div>
-                <div style="display:flex;gap:4px;">
-                    <button class="btn btn-xs btn-primary" onclick="editBot('${doc.id}')">✏️</button>
-                    <button class="btn btn-xs btn-danger" onclick="deleteBot('${doc.id}')">🗑️</button>
-                </div>`;
-            list.appendChild(div);
-        });
-    });
+    const u = await db.findOne('users', { id: currentUser.uid });
+    document.getElementById('eco-balance').textContent = u?.balance || 0;
+    
+    // Loja
+    document.getElementById('shop-items').innerHTML = `
+        <div class="shop-item"><span>🎨 Cor Nome</span><span>200 🪙</span><button class="btn btn-xs btn-primary" onclick="buyItem('color',200)">Comprar</button></div>
+        <div class="shop-item"><span>📛 Tag</span><span>400 🪙</span><button class="btn btn-xs btn-primary" onclick="buyItem('tag',400)">Comprar</button></div>`;
+    
+    // Ranking
+    const users = await db.find('users', {}, { sort: { balance: -1 }, limit: 10 });
+    document.getElementById('ranking').innerHTML = users.map((u,i) => 
+        `<div>${i+1}. ${esc(u.username)} - ${u.balance||0} 🪙</div>`
+    ).join('');
+    
+    // Empregos
+    const jobs = [
+        { name: '🧑‍💻 Dev', salary: 30 },
+        { name: '🎨 Designer', salary: 25 },
+        { name: '🎵 Músico', salary: 20 },
+        { name: '📝 Escritor', salary: 15 }
+    ];
+    document.getElementById('jobs-list').innerHTML = jobs.map(j =>
+        `<div class="shop-item"><span>${j.name}</span><span>${j.salary} 🪙/h</span><button class="btn btn-xs btn-primary" onclick="workJob('${j.name}',${j.salary})">Trabalhar</button></div>`
+    ).join('');
 }
 
-async function loadBotServerSelects() {
-    const bs = document.getElementById('select-bot-to-add');
-    const ss = document.getElementById('select-server-to-add');
-    bs.innerHTML = '<option value="">Seleciona um bot...</option>';
-    ss.innerHTML = '<option value="">Seleciona um servidor...</option>';
-    const bots = await db.collection('bots').where('ownerId','==',currentUser.uid).get();
-    bots.forEach(d => { const b=d.data(); bs.innerHTML += `<option value="${d.id}">${b.name} (${(b.servers||[]).length} servidores)</option>`; });
-    const servers = await db.collection('servers').where('members','array-contains',currentUser.uid).get();
-    servers.forEach(d => { ss.innerHTML += `<option value="${d.id}">${d.data().name}</option>`; });
+async function workJob(name, salary) {
+    const eco = await db.findOne('economy', { userId: currentUser.uid });
+    const last = eco?.lastWork ? new Date(eco.lastWork) : null;
+    const now = new Date();
+    if (last && (now - last) < 3600000) return toast('Aguarda 1h!', true);
+    
+    await db.upsert('economy', { userId: currentUser.uid }, {
+        job: name, salary, lastWork: now,
+        $inc: { totalEarned: salary }
+    });
+    
+    await db.update('users', { id: currentUser.uid }, {
+        $inc: { balance: salary }
+    });
+    
+    toast('Trabalhaste como ' + name + ' +' + salary + ' 🪙');
+    loadEconomy();
+}
+
+async function buyItem(item, price) {
+    const u = await db.findOne('users', { id: currentUser.uid });
+    if ((u?.balance||0) < price) return toast('Sem moedas!', true);
+    await db.update('users', { id: currentUser.uid }, {
+        balance: (u.balance||0) - price,
+        inventory: [...(u?.inventory||[]), item]
+    });
+    toast('Comprado!');
+    loadEconomy();
+}
+
+// ============ SISTEMA 3: MÚSICA ============
+async function loadMusic() {
+    if (!currentServer) return;
+    const playlist = await db.find('music', { serverId: currentServer });
+    document.getElementById('playlist').innerHTML = playlist.map(m =>
+        `<div class="shop-item"><span>🎵 ${esc(m.title||m.url)}</span><button class="btn btn-xs btn-danger" onclick="removeMusic('${m.id}')">✕</button></div>`
+    ).join('') || '<p>Playlist vazia.</p>';
+}
+
+async function playMusic() {
+    if (!currentServer) return toast('Seleciona servidor!', true);
+    const url = document.getElementById('music-url').value.trim();
+    if (!url) return;
+    
+    await db.insert('music', {
+        serverId: currentServer, url,
+        title: 'Música ' + Date.now().toString(36),
+        addedBy: currentUser.uid, timestamp: new Date()
+    });
+    
+    document.getElementById('now-playing').textContent = '▶️ A tocar: ' + url;
+    document.getElementById('music-url').value = '';
+    toast('Música adicionada! 🎵');
+    loadMusic();
+}
+
+async function removeMusic(id) {
+    await db.delete('music', { id });
+    toast('Removida.');
+    loadMusic();
+}
+
+// ============ SISTEMA 4: CHAMADAS ============
+async function loadCalls() {
+    if (!currentServer) {
+        document.getElementById('call-status').textContent = 'Seleciona um servidor.';
+        return;
+    }
+    const call = await db.findOne('calls', { serverId: currentServer, active: true });
+    if (call) {
+        document.getElementById('call-status').innerHTML = '🟢 Chamada ativa!<br>Participantes: ' + (call.participants?.length||0);
+        document.getElementById('call-participants').innerHTML = (call.participants||[]).map(p => `<div>👤 ${p}</div>`).join('');
+    } else {
+        document.getElementById('call-status').textContent = 'Nenhuma chamada ativa.';
+        document.getElementById('call-participants').innerHTML = '';
+    }
+}
+
+async function startCall() {
+    if (!currentServer || !currentChannel) return toast('Seleciona servidor e canal!', true);
+    
+    const existing = await db.findOne('calls', { serverId: currentServer, active: true });
+    if (existing) {
+        // Entrar na chamada existente
+        await db.update('calls', { id: existing.id }, {
+            participants: [...(existing.participants||[]), currentUser.uid]
+        });
+        toast('Entraste na chamada! 📞');
+    } else {
+        // Criar nova chamada
+        await db.insert('calls', {
+            serverId: currentServer, channelId: currentChannel,
+            participants: [currentUser.uid], active: true,
+            startedAt: new Date()
+        });
+        toast('Chamada iniciada! 📞');
+    }
+    currentCall = currentServer;
+    loadCalls();
+    
+    // Simular áudio
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioContext.createOscillator();
+        osc.frequency.value = 440;
+        osc.connect(audioContext.destination);
+        osc.start();
+        setTimeout(() => osc.stop(), 3000);
+    }
+}
+
+// ============ SISTEMA 5: BOTS ============
+async function loadBots() {
+    if (!currentUser) return;
+    const bots = await db.find('bots', { ownerId: currentUser.uid });
+    document.getElementById('my-bots').innerHTML = bots.map(b =>
+        `<div class="shop-item">
+            <span>🤖 ${esc(b.name)}</span>
+            <span class="token-display" onclick="copyToken('${b.token}')">${(b.token||'').substring(0,12)}...</span>
+            <button class="btn btn-xs btn-primary" onclick="editBot('${b.id}')">✏️</button>
+            <button class="btn btn-xs btn-danger" onclick="deleteBot('${b.id}')">🗑️</button>
+        </div>`
+    ).join('') || '<p>Nenhum bot.</p>';
+    
+    // Selects
+    const bs = document.getElementById('select-bot');
+    const ss = document.getElementById('select-server');
+    bs.innerHTML = '<option>Bot...</option>' + bots.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+    
+    const servers = await db.find('servers', { members: { $in: [currentUser.uid] } });
+    ss.innerHTML = '<option>Servidor...</option>' + servers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
 }
 
 async function createBot() {
-    const name = document.getElementById('new-bot-name').value.trim();
-    if (!name) return showToast('Dá um nome!', true);
-    const desc = document.getElementById('new-bot-desc').value.trim();
-    const prefix = document.getElementById('new-bot-prefix').value.trim() || '!';
-    const token = 'bot_' + Math.random().toString(36).substring(2,15) + Math.random().toString(36).substring(2,10);
-    await db.collection('bots').add({
-        name, desc, token, prefix, ownerId: currentUser.uid, active: true,
-        servers: [], commands: {}, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    const name = document.getElementById('bot-name').value.trim();
+    if (!name) return toast('Dá nome!', true);
+    const desc = document.getElementById('bot-desc').value.trim();
+    const token = 'bot_' + Math.random().toString(36).substring(2,16);
+    
+    await db.insert('bots', {
+        name, desc, token, ownerId: currentUser.uid,
+        active: true, servers: [], commands: {},
+        createdAt: new Date(), prefix: '!'
     });
-    document.getElementById('new-bot-name').value = '';
-    document.getElementById('new-bot-desc').value = '';
-    showToast('Bot criado! 🤖 Token: ' + token.substring(0,15) + '...');
-    loadBotsPanel();
+    
+    document.getElementById('bot-name').value = '';
+    document.getElementById('bot-desc').value = '';
+    toast('Bot criado! 🤖 Token: ' + token.substring(0,15) + '...');
+    loadBots();
 }
 
 async function addBotToServer() {
-    const botId = document.getElementById('select-bot-to-add').value;
-    const serverId = document.getElementById('select-server-to-add').value;
-    if (!botId || !serverId) return showToast('Seleciona ambos!', true);
+    const bid = document.getElementById('select-bot').value;
+    const sid = document.getElementById('select-server').value;
+    if (!bid || !sid) return toast('Seleciona!', true);
     
-    // Adicionar servidor à lista do bot
-    const botDoc = await db.collection('bots').doc(botId).get();
-    const botData = botDoc.data() || {};
-    const servers = botData.servers || [];
-    if (servers.includes(serverId)) return showToast('Bot já está neste servidor!');
+    const bot = await db.findOne('bots', { id: bid });
+    const servers = bot?.servers || [];
+    if (servers.includes(sid)) return toast('Já está!');
     
-    await db.collection('bots').doc(botId).update({
-        servers: firebase.firestore.FieldValue.arrayUnion(serverId),
-        serverId: serverId // compatibilidade com versão antiga
-    });
-    
-    // Mensagem no canal geral
-    const chSnap = await db.collection('servers').doc(serverId).collection('channels').limit(1).get();
-    if (!chSnap.empty) {
-        await db.collection('servers').doc(serverId).collection('channels').doc(chSnap.docs[0].id)
-            .collection('messages').add({
-                autor: 'Sistema', texto: `🤖 O bot **${botData.name}** entrou no servidor!`,
-                userId: 'system', isBot: false, isSystem: true, hasNitro: false,
-                badges: [], reactions: {}, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-    }
-    
-    showToast('Bot adicionado! 🎉');
-    loadBotsPanel();
-    loadBotServerList(botId);
-}
-
-async function loadBotServerList(botId) {
-    const doc = await db.collection('bots').doc(botId).get();
-    const servers = (doc.data()||{}).servers || [];
-    const list = document.getElementById('bot-servers-list');
-    if (!list) return;
-    list.innerHTML = '<b>Servidores do bot:</b><br>';
-    if (!servers.length) { list.innerHTML += 'Nenhum servidor.'; return; }
-    for (const sid of servers) {
-        const s = await db.collection('servers').doc(sid).get();
-        list.innerHTML += `<div>• ${escapeHtml((s.data()||{}).name||sid)}</div>`;
-    }
+    await db.update('bots', { id: bid }, { servers: [...servers, sid] });
+    toast('Bot adicionado! 🎉');
+    loadBots();
 }
 
 async function editBot(id) {
     const name = prompt('Nome:');
     if (!name) return;
-    const cmds = prompt('Comandos (formato: !cmd=resposta, separados por vírgula):\nEx: !ola=Olá!, !adeus=Até logo!');
+    const cmds = prompt('Comandos (!cmd=resposta,!cmd2=resp2):');
     const commands = {};
-    if (cmds) cmds.split(',').forEach(p => { const [c,r] = p.split('='); if(c&&r) commands[c.trim().toLowerCase()]=r.trim(); });
-    await db.collection('bots').doc(id).update({ name, commands });
-    showToast('Atualizado! ✏️');
+    if (cmds) cmds.split(',').forEach(p => {
+        const [c,r] = p.split('=');
+        if (c && r) commands[c.trim().toLowerCase()] = r.trim();
+    });
+    await db.update('bots', { id }, { name, commands });
+    toast('Atualizado!');
+    loadBots();
 }
 
 async function deleteBot(id) {
-    if (!confirm('Apagar bot?')) return;
-    await db.collection('bots').doc(id).delete();
-    showToast('Apagado! 🗑️');
+    if (confirm('Apagar?')) {
+        await db.delete('bots', { id });
+        toast('Apagado!');
+        loadBots();
+    }
 }
 
-async function copyBotToken(id, el) {
-    const doc = await db.collection('bots').doc(id).get();
-    await navigator.clipboard.writeText(doc.data().token);
-    const tt = el.querySelector('.copied-tooltip');
-    if (tt) { tt.classList.add('show'); setTimeout(() => tt.classList.remove('show'), 1500); }
-    showToast('Token copiado! 📋');
+function copyToken(t) {
+    navigator.clipboard.writeText(t);
+    toast('Token copiado! 📋');
 }
 
-function copyCodeExample() {
-    const code = document.getElementById('code-example').textContent;
-    navigator.clipboard.writeText(code).then(() => showToast('Código copiado! 📋'));
+// ============ SISTEMA 6: CARGOS ============
+async function addRole() {
+    if (!currentServer) return toast('Seleciona servidor!', true);
+    const name = prompt('Nome do cargo:');
+    if (!name) return;
+    const color = prompt('Cor (ex: #ff0000):', '#5865f2');
+    
+    const server = await db.findOne('servers', { id: currentServer });
+    const roles = server?.roles || [];
+    roles.push({ id: 'role_'+Date.now(), name, color });
+    await db.update('servers', { id: currentServer }, { roles });
+    toast('Cargo criado!');
 }
 
-// =============================================
-// DEFINIÇÕES
-// =============================================
+// ============ SISTEMA 7: CONVITES E DESCOBERTA ============
+async function generateInvite() {
+    if (!currentServer) return toast('Seleciona servidor!', true);
+    const code = Math.random().toString(36).substring(2,8).toUpperCase();
+    const server = await db.findOne('servers', { id: currentServer });
+    await db.update('servers', { id: currentServer }, { 
+        invites: [...(server?.invites||[]), code] 
+    });
+    toast('Convite: ' + code);
+}
 
-async function loadSettingsPanel() {
-    if (!currentUser) return;
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    const data = doc.data() || {};
-    document.getElementById('settings-username').value = data.username || '';
-    document.getElementById('settings-bio').value = data.bio || '';
-    const inv = data.inventory || [];
-    const names = { 'effect_glow':'✨ Glow', 'effect_rainbow':'🌈 Arco-Íris', 'effect_crystal':'💎 Cristal' };
-    document.getElementById('inventory-list').innerHTML = inv.length ? inv.map(i => `<div style="padding:6px;background:var(--bg-tertiary);border-radius:4px;margin:2px;font-size:12px;">${names[i]||i}</div>`).join('') : '<p class="placeholder-text">Vazio.</p>';
+async function searchServers() {
+    const q = (document.getElementById('discover-search')?.value || '').toLowerCase();
+    const servers = await db.find('servers', { isPublic: true });
+    const results = document.getElementById('discover-results');
+    results.innerHTML = servers
+        .filter(s => !q || s.name.toLowerCase().includes(q))
+        .map(s => `<div class="shop-item"><span>${esc(s.name)}</span><span>${(s.members||[]).length} membros</span><button class="btn btn-xs btn-primary" onclick="joinServer('${s.id}')">Entrar</button></div>`)
+        .join('') || '<p>Nenhum servidor.</p>';
+}
+
+async function joinServer(id) {
+    const server = await db.findOne('servers', { id });
+    if (!server) return;
+    if ((server.members||[]).includes(currentUser.uid)) return toast('Já estás!');
+    await db.update('servers', { id }, { members: [...(server.members||[]), currentUser.uid] });
+    toast('Entraste! 🎉');
+    closeModal('discover-modal');
+    loadServers();
+}
+
+// ============ SETTINGS ============
+async function loadSettings() {
+    const u = await db.findOne('users', { id: currentUser.uid });
+    document.getElementById('settings-name').value = u?.username || '';
+    document.getElementById('settings-bio').value = u?.bio || '';
+    document.getElementById('inventory').innerHTML = (u?.inventory||[]).map(i => `<div>📦 ${i}</div>`).join('') || 'Vazio';
 }
 
 async function saveProfile() {
-    const name = document.getElementById('settings-username').value.trim();
-    if (!name) return showToast('Nome obrigatório!', true);
+    const name = document.getElementById('settings-name').value.trim();
+    if (!name) return toast('Nome obrigatório!', true);
     await currentUser.updateProfile({ displayName: name });
-    await db.collection('users').doc(currentUser.uid).update({ username: name, bio: document.getElementById('settings-bio').value.trim() });
+    await db.update('users', { id: currentUser.uid }, { 
+        username: name, 
+        bio: document.getElementById('settings-bio').value.trim() 
+    });
     document.getElementById('username-footer').textContent = name;
-    showToast('Guardado! 💾');
+    toast('Guardado! 💾');
 }
 
-function changeTheme(t) {
-    const themes = {
-        dark: {'--bg-primary':'#1a1b1e','--bg-secondary':'#1f2024','--bg-tertiary':'#2a2b30','--text-normal':'#e4e4e7','--text-muted':'#a1a1aa','--text-bright':'#fff'},
-        light: {'--bg-primary':'#f4f4f5','--bg-secondary':'#fff','--bg-tertiary':'#e4e4e7','--text-normal':'#18181b','--text-muted':'#71717a','--text-bright':'#09090b'},
-        midnight: {'--bg-primary':'#09090b','--bg-secondary':'#0f0f14','--bg-tertiary':'#1a1a24','--text-normal':'#d4d4d8','--text-muted':'#71717a','--text-bright':'#fafafa'},
-        ocean: {'--bg-primary':'#0c1929','--bg-secondary':'#112240','--bg-tertiary':'#1a365d','--text-normal':'#ccd6f6','--text-muted':'#8892b0','--text-bright':'#e6f1ff'}
-    };
-    const th = themes[t] || themes.dark;
-    for (const [p,v] of Object.entries(th)) document.documentElement.style.setProperty(p,v);
-    showToast('Tema: ' + t);
-}
-
-// =============================================
-// MODAIS
-// =============================================
-
+// ============ MODAIS E SERVIDORES ============
 function showServerModal() { document.getElementById('server-modal').style.display = 'flex'; }
-function showChannelModal() { if (!currentServer) return showToast('Seleciona servidor!', true); document.getElementById('channel-modal').style.display = 'flex'; }
-function showServerSettings() { if (currentServer) switchView('members'); }
+function showChannelModal() { if (!currentServer) return toast('Seleciona servidor!', true); document.getElementById('channel-modal').style.display = 'flex'; }
+function showDiscoverModal() { document.getElementById('discover-modal').style.display = 'flex'; searchServers(); }
 function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
 async function createServer() {
     const name = document.getElementById('server-name').value.trim();
     const template = document.getElementById('server-template').value;
     if (!name) return;
+    
     const templates = {
         default: ['geral'],
-        gaming: ['geral', 'jogos', 'clips', 'eventos'],
-        study: ['geral', 'duvidas', 'recursos', 'anuncios'],
-        art: ['geral', 'arte', 'feedback', 'comissoes']
+        gaming: ['geral','🎮jogos','📺clips'],
+        study: ['geral','📚estudos','📝duvidas']
     };
-    const channels = templates[template] || templates.default;
-    const ref = await db.collection('servers').add({
-        name, ownerId: currentUser.uid, members: [currentUser.uid], invites: [], roles: [],
-        isPublic: true, template, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    
+    const result = await db.insert('servers', {
+        name, ownerId: currentUser.uid, members: [currentUser.uid],
+        invites: [], roles: [], isPublic: true,
+        createdAt: new Date(), template
     });
+    
+    const channels = templates[template] || templates.default;
     for (const ch of channels) {
-        await db.collection('servers').doc(ref.id).collection('channels').add({ name: ch, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        await db.insert('channels', {
+            serverId: result.id, name: ch,
+            createdAt: new Date(), type: 'text'
+        });
     }
+    
     closeModal('server-modal');
     document.getElementById('server-name').value = '';
-    showToast('Servidor criado! 🎉');
+    toast('Servidor criado! 🎉');
+    loadServers();
 }
 
 async function createChannel() {
     const name = document.getElementById('channel-name').value.trim();
     if (!name || !currentServer) return;
-    await db.collection('servers').doc(currentServer).collection('channels').add({ name, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await db.insert('channels', {
+        serverId: currentServer, name,
+        createdAt: new Date(), type: 'text'
+    });
     closeModal('channel-modal');
     document.getElementById('channel-name').value = '';
-    showToast('Canal criado!');
+    toast('Canal criado!');
+    selectServer(currentServer, document.getElementById('sidebar-server-name').textContent);
 }
 
-// =============================================
-// UI HELPERS
-// =============================================
-
+// ============ HELPERS ============
 function toggleSidebar() {
-    const sidebar = document.getElementById('channel-sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    const isOpen = sidebar.classList.contains('open');
-    if (isOpen) { sidebar.classList.remove('open'); overlay.classList.remove('show'); document.body.style.overflow = ''; }
-    else { sidebar.classList.add('open'); overlay.classList.add('show'); document.body.style.overflow = 'hidden'; }
+    const s = document.getElementById('sidebar');
+    const o = document.getElementById('sidebar-overlay');
+    s.classList.toggle('open');
+    o.classList.toggle('show');
 }
 
-function showToast(msg, isError = false) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.className = 'toast' + (isError ? ' error' : '');
-    toast.classList.add('show');
-    clearTimeout(toast._timeout);
-    toast._timeout = setTimeout(() => toast.classList.remove('show'), 2500);
+function toast(m, e) {
+    const t = document.getElementById('toast');
+    t.textContent = m;
+    t.className = 'toast' + (e ? ' error' : '');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+function esc(t) { const d = document.createElement('div'); d.textContent = t||''; return d.innerHTML; }
+function strColor(s) { let h=0; for(let i=0;i<(s||'?').length;i++) h=s.charCodeAt(i)+((h<<5)-h); return `hsl(${Math.abs(h)%360},60%,55%)`; }
+function fmtText(t) { t=t.replace(/@(\w+)/g,'<span class="mention">@$1</span>'); t=t.replace(/`([^`]+)`/g,'<span class="code">$1</span>'); t=t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'); return t; }
+
+function loadAllData() {
+    loadServers();
+    loadFriends();
+    loadNitro();
+    loadBots();
+    loadEconomy();
+    loadMusic();
+    loadCalls();
+    loadSettings();
 }
 
-function stringToColor(str) {
-    if (!str) return 'hsl(0,0%,50%)';
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    return `hsl(${Math.abs(hash) % 360}, 60%, 55%)`;
+function setupRealtime() {
+    setInterval(() => {
+        if (currentUser && db) {
+            db.update('users', { id: currentUser.uid }, { isOnline: true, lastSeen: new Date() });
+        }
+    }, 30000);
 }
 
-function formatMessageText(text) {
-    text = text.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
-    text = text.replace(/`([^`]+)`/g, '<span class="code-inline">$1</span>');
-    text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    return text;
-}
-
-function searchMessages() {
-    const query = document.getElementById('search-messages')?.value.toLowerCase();
-    const messages = document.querySelectorAll('.message');
-    messages.forEach(msg => {
-        const text = msg.querySelector('.message-text')?.textContent.toLowerCase() || '';
-        msg.style.display = !query || text.includes(query) ? 'flex' : 'none';
-    });
-}
-
-function showEmojiPicker() {
-    const emojis = ['😀','😂','❤️','🔥','👍','🎉','😢','😡','⭐','💯'];
-    const input = document.getElementById('msg-input');
-    input.value += emojis[Math.floor(Math.random()*emojis.length)];
-    input.focus();
-}
-
-// =============================================
-// EVENT LISTENERS
-// =============================================
-
-document.getElementById('server-modal')?.addEventListener('click', function(e) { if (e.target === this) closeModal('server-modal'); });
-document.getElementById('channel-modal')?.addEventListener('click', function(e) { if (e.target === this) closeModal('channel-modal'); });
-document.getElementById('discover-modal')?.addEventListener('click', function(e) { if (e.target === this) closeModal('discover-modal'); });
-document.getElementById('msg-input')?.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 100) + 'px'; });
+// Event Listeners
+document.getElementById('server-modal')?.addEventListener('click', e => { if(e.target.id==='server-modal') closeModal('server-modal'); });
+document.getElementById('channel-modal')?.addEventListener('click', e => { if(e.target.id==='channel-modal') closeModal('channel-modal'); });
+document.getElementById('discover-modal')?.addEventListener('click', e => { if(e.target.id==='discover-modal') closeModal('discover-modal'); });
+document.getElementById('msg-input')?.addEventListener('input', function(){ this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,100)+'px'; });
 document.getElementById('sidebar-overlay')?.addEventListener('click', toggleSidebar);
 
-document.addEventListener('click', function(e) {
-    const sidebar = document.getElementById('channel-sidebar');
-    if (!sidebar || !sidebar.classList.contains('open')) return;
-    if (window.innerWidth > 768) return;
-    const clicked = e.target.closest('.channel-item') || e.target.closest('.quick-nav-item');
-    if (clicked) setTimeout(toggleSidebar, 150);
+function showServerSettings() { if (currentServer) switchView('members'); }
+function showEmojiPicker() { document.getElementById('msg-input').value += '😊'; document.getElementById('msg-input').focus(); }
+function searchMessages() {
+    const q = document.getElementById('search-msg')?.value.toLowerCase();
+    document.querySelectorAll('.message').forEach(m => {
+        m.style.display = !q || m.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+    });
+}
+function changeTheme(t) {
+    const themes = {
+        dark: {'--bg-primary':'#313338','--bg-secondary':'#2b2d31','--bg-tertiary':'#1e1f22'},
+        light: {'--bg-primary':'#f2f3f5','--bg-secondary':'#fff','--bg-tertiary':'#e3e5e8'},
+        midnight: {'--bg-primary':'#0a0a14','--bg-secondary':'#0f0f1e','--bg-tertiary':'#1a1a30'}
+    };
+    const th = themes[t] || themes.dark;
+    for (const [k,v] of Object.entries(th)) document.documentElement.style.setProperty(k,v);
+}
+
+// Inicialização
+document.getElementById('msg-input')?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMsg();
+    }
 });
 
-document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
-
-console.log('🐺 Cord v2.0 - Inicializado com sucesso!');
+console.log('🐺 Cord v3.0 - CloudBinary + 7 Sistemas - Pronto!');
