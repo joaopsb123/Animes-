@@ -79,7 +79,7 @@
     --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Z-index */
-    --z-sidebar: 100;
+    --z-sidebar: 150;
     --z-sidebar-overlay: 140;
     --z-topbar: 50;
     --z-modal: 200;
@@ -1599,7 +1599,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   SIDEBAR OVERLAY (MOBILE)
+   SIDEBAR OVERLAY (MOBILE) - CORRIGIDO
    ============================================= */
 .sidebar-overlay {
     display: none;
@@ -1640,7 +1640,7 @@ input, textarea, select {
         display: flex;
     }
 
-    /* Sidebar como drawer */
+    /* Sidebar como drawer - CORRIGIDO */
     .sidebar {
         position: fixed;
         left: 0;
