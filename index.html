@@ -3,122 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnimeFire Player</title>
+    <title>Cord - O Teu Chat</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #0a0a1a;
-            color: #eee;
-            font-family: Arial, sans-serif;
-            padding: 15px;
-            min-height: 100vh;
-        }
-        h1 { color: #e94560; text-align: center; margin: 15px 0; }
-        .search { display: flex; gap: 8px; max-width: 500px; margin: 0 auto 20px auto; }
-        input {
-            flex: 1; padding: 12px; border-radius: 8px;
-            border: 1px solid #333; background: #1a1a2e;
-            color: #eee; font-size: 16px;
-        }
-        button {
-            padding: 12px 20px; background: #e94560; color: #fff;
-            border: none; border-radius: 8px; font-size: 16px; cursor: pointer;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 12px; max-width: 900px; margin: 0 auto;
-        }
-        .card {
-            background: #1a1a2e; border-radius: 10px; padding: 15px;
-            border: 1px solid #16213e;
-        }
-        .card h3 { font-size: 16px; margin-bottom: 8px; }
-        .card .info { font-size: 12px; color: #aaa; margin-bottom: 6px; }
-        .card .score { color: #ffd700; }
-        .card .eps { color: #4ecca3; }
-        .card .sinopse { font-size: 11px; color: #999; margin-bottom: 12px; }
-        .card a {
-            display: block; text-align: center; padding: 10px;
-            border-radius: 6px; text-decoration: none; font-size: 14px; margin-bottom: 5px;
-        }
-        .card a.animefire { background: #e94560; color: #fff; }
-        .card a.animefire:hover { background: #c73a52; }
-        .card a.gogo { background: #4ecca3; color: #000; }
-        .card a.gogo:hover { background: #3da882; }
-        .loading { text-align: center; padding: 40px; color: #aaa; }
-        .vazio { text-align: center; padding: 60px; color: #555; }
+        body { font-family: Arial, sans-serif; background: #36393f; color: white; height: 100vh; display: flex; }
+        
+        .sidebar { width: 240px; background: #2f3136; padding: 15px; display: flex; flex-direction: column; gap: 5px; }
+        .server-btn { background: #5865f2; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .server-btn:hover { background: #4752c4; }
+        .channel-btn { background: #4e5058; color: #b9bbbe; border: none; padding: 8px; border-radius: 5px; cursor: pointer; text-align: left; margin-top: 5px; }
+        .channel-btn.active { background: #42464d; color: white; }
+
+        .main { flex: 1; display: flex; flex-direction: column; }
+        .chat-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .msg { background: #42464d; padding: 10px; border-radius: 8px; }
+        .msg .autor { color: #5865f2; font-weight: bold; }
+        .msg .bot-badge { background: #5865f2; color: white; font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-left: 5px; }
+
+        .input-area { padding: 15px; background: #40444b; display: flex; gap: 10px; }
+        .input-area input { flex: 1; padding: 10px; border-radius: 8px; border: none; background: #2f3136; color: white; }
+        .input-area button { background: #5865f2; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; }
+        .modal-content { background: #2f3136; padding: 25px; border-radius: 10px; width: 400px; }
+        .modal-content h3 { margin-bottom: 15px; }
+        .modal-content input { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; background: #40444b; color: white; }
+        .modal-content button { background: #5865f2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>🍥 Anime Player</h1>
+<div class="sidebar" id="sidebar">
+    <h3>Servidores</h3>
+    <button class="server-btn" onclick="showServerModal()">+ Criar Servidor</button>
+    <div id="server-list"></div>
+    <h4 style="margin-top:15px;">Canais</h4>
+    <div id="channel-list"></div>
+</div>
 
-    <div class="search">
-        <input type="text" id="pesquisa" placeholder="Nome do anime..." autofocus>
-        <button onclick="buscar()">🔍</button>
+<div class="main">
+    <div class="chat-area" id="chat-box"></div>
+    <div class="input-area">
+        <input id="msg-input" type="text" placeholder="Mensagem..." onkeypress="if(event.key==='Enter') sendMsg()" />
+        <button onclick="sendMsg()">Enviar</button>
     </div>
+</div>
 
-    <div class="grid" id="lista"></div>
-    <div class="loading" id="loading" style="display:none;">A buscar...</div>
+<!-- Modal Criar Servidor -->
+<div class="modal" id="server-modal">
+    <div class="modal-content">
+        <h3>Criar Servidor</h3>
+        <input id="server-name" placeholder="Nome do servidor" />
+        <button onclick="createServer()">Criar</button>
+        <button onclick="document.getElementById('server-modal').style.display='none'" style="background:#747f8d;">Cancelar</button>
+    </div>
+</div>
 
-    <script>
-        const ANIMEFIRE = 'https://animefire.io';
-        const GOGO = 'https://gogoanimes.cv';
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCnRAOY08ABtG87T2ioDM4lzYgDB6q3rBw",
+        authDomain: "cord-c6f05.firebaseapp.com",
+        projectId: "cord-c6f05",
+        storageBucket: "cord-c6f05.firebasestorage.app",
+        messagingSenderId: "777848965663",
+        appId: "1:777848965663:web:03c1631fc8899f773c632a"
+    };
 
-        async function buscar() {
-            const q = document.getElementById('pesquisa').value.trim();
-            if (!q) return;
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('lista').innerHTML = '';
+    let currentServer = null;
+    let currentChannel = null;
 
-            try {
-                const r = await fetch('https://api.jikan.moe/v4/anime?q=' + encodeURIComponent(q) + '&limit=12');
-                const d = await r.json();
+    // Escuta servidores em tempo real
+    db.collection("servers").onSnapshot(snapshot => {
+        const list = document.getElementById('server-list');
+        list.innerHTML = '';
+        snapshot.forEach(doc => {
+            const server = doc.data();
+            const btn = document.createElement('button');
+            btn.className = 'server-btn';
+            btn.style.background = '#4e5058';
+            btn.textContent = server.name;
+            btn.onclick = () => loadChannels(doc.id, server.name);
+            list.appendChild(btn);
+        });
+    });
 
-                if (d.data && d.data.length > 0) {
-                    let html = '';
-                    d.data.forEach(a => {
-                        const slug = a.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-                        html += `
-                            <div class="card">
-                                <h3>${a.title}</h3>
-                                <p class="info">
-                                    <span class="score">⭐ ${a.score || '?'}</span> •
-                                    <span class="eps">🎬 ${a.episodes || '?'} eps</span> •
-                                    ${a.type || ''} • ${a.year || ''}
-                                </p>
-                                <p class="sinopse">${(a.synopsis || '').substring(0, 150)}...</p>
-                                <a href="${ANIMEFIRE}/pesquisar/${encodeURIComponent(slug)}" target="_blank" class="animefire">
-                                    ▶ AnimeFire
-                                </a>
-                                <a href="${GOGO}/search?q=${encodeURIComponent(a.title)}" target="_blank" class="gogo">
-                                    ▶ GogoAnimes
-                                </a>
-                            </div>
-                        `;
-                    });
-                    document.getElementById('lista').innerHTML = html;
-                } else {
-                    document.getElementById('lista').innerHTML = '<p class="vazio">Nada encontrado</p>';
-                }
-            } catch(e) {
-                document.getElementById('lista').innerHTML = '<p class="vazio">Erro de conexão</p>';
-            }
+    function showServerModal() {
+        document.getElementById('server-modal').style.display = 'flex';
+    }
 
-            document.getElementById('loading').style.display = 'none';
-        }
+    function createServer() {
+        const name = document.getElementById('server-name').value.trim();
+        if (!name) return;
+        db.collection("servers").add({
+            name: name,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(docRef => {
+            // Cria canal padrão
+            db.collection("servers").doc(docRef.id).collection("channels").add({
+                name: "geral",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            document.getElementById('server-modal').style.display = 'none';
+            document.getElementById('server-name').value = '';
+            loadChannels(docRef.id, name);
+        });
+    }
 
-        document.getElementById('pesquisa').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') buscar();
+    function loadChannels(serverId, serverName) {
+        currentServer = serverId;
+        currentChannel = null;
+        document.getElementById('channel-list').innerHTML = `<p style="color:#b9bbbe;font-size:13px;">${serverName}</p>`;
+        document.getElementById('chat-box').innerHTML = '';
+
+        db.collection("servers").doc(serverId).collection("channels").onSnapshot(snapshot => {
+            const list = document.getElementById('channel-list');
+            list.innerHTML = `<p style="color:#b9bbbe;font-size:13px;margin-bottom:5px;">${serverName}</p>`;
+            snapshot.forEach(doc => {
+                const ch = doc.data();
+                const btn = document.createElement('button');
+                btn.className = 'channel-btn';
+                btn.textContent = '# ' + ch.name;
+                btn.onclick = () => loadMessages(serverId, doc.id, ch.name);
+                list.appendChild(btn);
+            });
+        });
+    }
+
+    function loadMessages(serverId, channelId, channelName) {
+        currentChannel = channelId;
+        document.getElementById('chat-box').innerHTML = `<p style="color:#b9bbbe;">Canal: #${channelName}</p>`;
+
+        db.collection("servers").doc(serverId)
+          .collection("channels").doc(channelId)
+          .collection("messages").orderBy("timestamp", "asc")
+          .onSnapshot(snapshot => {
+              const box = document.getElementById('chat-box');
+              box.innerHTML = `<p style="color:#b9bbbe;">Canal: #${channelName}</p>`;
+              snapshot.forEach(doc => {
+                  const msg = doc.data();
+                  const isBot = msg.isBot ? '<span class="bot-badge">BOT</span>' : '';
+                  box.innerHTML += `<div class="msg"><span class="autor">${msg.autor}${isBot}</span>: ${msg.texto}</div>`;
+              });
+              box.scrollTop = box.scrollHeight;
+          });
+    }
+
+    function sendMsg() {
+        const input = document.getElementById('msg-input');
+        const texto = input.value.trim();
+        if (!texto || !currentServer || !currentChannel) return;
+
+        db.collection("servers").doc(currentServer)
+          .collection("channels").doc(currentChannel)
+          .collection("messages").add({
+            autor: "Eu",
+            texto: texto,
+            isBot: false,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Abre com Naruto de exemplo
-        window.onload = function() {
-            document.getElementById('pesquisa').value = 'Naruto';
-            buscar();
-        };
-    </script>
+        // Se for comando !ping, o "bot" do sistema responde
+        if (texto === '!ping') {
+            setTimeout(() => {
+                db.collection("servers").doc(currentServer)
+                  .collection("channels").doc(currentChannel)
+                  .collection("messages").add({
+                    autor: "Bot Sistema",
+                    texto: "Pong! 🏓",
+                    isBot: true,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }, 500);
+        }
+
+        input.value = '';
+    }
+</script>
 </body>
 </html>
