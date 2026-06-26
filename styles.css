@@ -1,13 +1,14 @@
 /* =============================================
-   CORD - REDE SOCIAL COMPLETA
+   🐺 CORD - REDE SOCIAL COMPLETA
    Folha de Estilos Principal
+   Versão: 2.0
    ============================================= */
 
 /* =============================================
-   VARIÁVEIS GLOBAIS
+   1. VARIÁVEIS GLOBAIS (TEMAS)
    ============================================= */
 :root {
-    /* Cores principais - Tema Escuro (Padrão) */
+    /* === Tema Escuro (Padrão) === */
     --bg-primary: #1a1b1e;
     --bg-secondary: #1f2024;
     --bg-tertiary: #2a2b30;
@@ -16,13 +17,13 @@
     --bg-hover: rgba(255, 255, 255, 0.04);
     --bg-active: rgba(255, 255, 255, 0.08);
     
-    /* Texto */
+    /* === Texto === */
     --text-normal: #e4e4e7;
     --text-muted: #a1a1aa;
     --text-bright: #ffffff;
     --text-link: #818cf8;
     
-    /* Cores de destaque */
+    /* === Cores de Destaque === */
     --blurple: #6366f1;
     --blurple-hover: #5558e6;
     --blurple-light: rgba(99, 102, 241, 0.15);
@@ -39,19 +40,20 @@
     --orange: #f97316;
     --purple: #8b5cf6;
     
-    /* Gradientes */
+    /* === Gradientes === */
     --gradient-nitro: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
     --gradient-gold: linear-gradient(135deg, #f59e0b, #f97316);
     --gradient-sunset: linear-gradient(135deg, #f97316, #ef4444, #ec4899);
     --gradient-ocean: linear-gradient(135deg, #06b6d4, #3b82f6, #6366f1);
+    --gradient-premium: linear-gradient(135deg, #f59e0b, #ef4444, #8b5cf6);
     
-    /* Bordas */
+    /* === Bordas === */
     --border-subtle: rgba(255, 255, 255, 0.06);
     --border-medium: rgba(255, 255, 255, 0.1);
     --border-strong: rgba(255, 255, 255, 0.15);
     --border-focus: rgba(99, 102, 241, 0.4);
     
-    /* Sombras */
+    /* === Sombras === */
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
@@ -59,40 +61,44 @@
     --shadow-xl: 0 16px 50px rgba(0, 0, 0, 0.6);
     --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
     
-    /* Bordas arredondadas */
+    /* === Bordas Arredondadas === */
     --radius-xs: 4px;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
     --radius-xl: 20px;
+    --radius-2xl: 24px;
     --radius-full: 50%;
     
-    /* Safe area para mobile */
+    /* === Safe Areas (Mobile) === */
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-left: env(safe-area-inset-left, 0px);
     --safe-right: env(safe-area-inset-right, 0px);
     
-    /* Transições */
+    /* === Transições === */
     --transition-fast: 0.15s ease;
     --transition-normal: 0.25s ease;
     --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* Z-index */
+    /* === Z-Index === */
     --z-sidebar: 150;
     --z-sidebar-overlay: 140;
     --z-topbar: 50;
     --z-modal: 200;
     --z-toast: 300;
     --z-auth: 1000;
+    
+    /* === Tamanhos === */
+    --sidebar-width: 270px;
+    --topbar-height: 52px;
+    --chat-input-height: 42px;
 }
 
 /* =============================================
-   RESET E ESTILOS BASE
+   2. RESET E ESTILOS BASE
    ============================================= */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -125,14 +131,14 @@ body {
     font-weight: 400;
 }
 
-/* Permitir seleção em inputs e textareas */
+/* Permitir seleção de texto em inputs */
 input, textarea, select {
     -webkit-user-select: text;
     user-select: text;
 }
 
 /* =============================================
-   SCROLLBARS PERSONALIZADAS
+   3. SCROLLBARS PERSONALIZADAS
    ============================================= */
 ::-webkit-scrollbar {
     width: 5px;
@@ -157,14 +163,14 @@ input, textarea, select {
     background: transparent;
 }
 
-/* Firefox */
+/* Suporte Firefox */
 * {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
 }
 
 /* =============================================
-   AUTENTICAÇÃO
+   4. AUTENTICAÇÃO
    ============================================= */
 #auth-container {
     position: fixed;
@@ -196,28 +202,53 @@ input, textarea, select {
     margin: auto;
 }
 
+/* =============================================
+   5. ANIMAÇÕES
+   ============================================= */
 @keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalSlideIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes logoPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
+
+@keyframes nitroGlow {
+    0%, 100% { box-shadow: 0 0 5px rgba(139, 92, 246, 0.3); border-color: var(--purple); }
+    50% { box-shadow: 0 0 18px rgba(139, 92, 246, 0.7); border-color: #a78bfa; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes onlinePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+}
+
+/* =============================================
+   6. LOGO E TÍTULOS
+   ============================================= */
 .auth-box .logo-icon {
     font-size: 48px;
     text-align: center;
     margin-bottom: 4px;
     display: block;
     animation: logoPulse 3s ease-in-out infinite;
-}
-
-@keyframes logoPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
 }
 
 .auth-box h1 {
@@ -237,7 +268,9 @@ input, textarea, select {
     line-height: 1.4;
 }
 
-/* Tabs de autenticação */
+/* =============================================
+   7. TABS DE AUTENTICAÇÃO
+   ============================================= */
 .auth-tabs {
     display: flex;
     background: var(--bg-tertiary);
@@ -274,7 +307,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   GRUPOS DE FORMULÁRIO
+   8. FORMULÁRIOS
    ============================================= */
 .form-group {
     margin-bottom: 14px;
@@ -335,7 +368,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   BOTÕES
+   9. BOTÕES
    ============================================= */
 .btn {
     display: inline-flex;
@@ -358,86 +391,32 @@ input, textarea, select {
     overflow: hidden;
 }
 
-.btn:active {
-    transform: scale(0.96);
-}
+.btn:active { transform: scale(0.96); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
-.btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-}
+/* Variantes */
+.btn-primary { background: var(--blurple); }
+.btn-primary:hover:not(:disabled) { background: var(--blurple-hover); box-shadow: 0 4px 15px var(--blurple-glow); }
 
-/* Variantes de botões */
-.btn-primary {
-    background: var(--blurple);
-}
+.btn-danger { background: var(--red); }
+.btn-danger:hover:not(:disabled) { background: #dc2626; }
 
-.btn-primary:hover:not(:disabled) {
-    background: var(--blurple-hover);
-    box-shadow: 0 4px 15px var(--blurple-glow);
-}
+.btn-success { background: var(--green); }
+.btn-success:hover:not(:disabled) { background: #16a34a; }
 
-.btn-danger {
-    background: var(--red);
-}
+.btn-google { background: #4285f4; margin-top: 10px; }
+.btn-google:hover:not(:disabled) { background: #3367d6; }
 
-.btn-danger:hover:not(:disabled) {
-    background: #dc2626;
-}
+.btn-outline { background: transparent; border: 1.5px solid var(--border-medium); color: var(--text-bright); }
+.btn-outline:hover:not(:disabled) { background: rgba(255, 255, 255, 0.05); border-color: var(--border-strong); }
 
-.btn-success {
-    background: var(--green);
-}
+/* Tamanhos */
+.btn-sm { padding: 8px 14px; font-size: 12px; border-radius: 6px; }
+.btn-xs { padding: 5px 10px; font-size: 10px; border-radius: 5px; }
+.btn-lg { padding: 14px 24px; font-size: 16px; border-radius: var(--radius-md); }
+.btn-block { width: 100%; }
 
-.btn-success:hover:not(:disabled) {
-    background: #16a34a;
-}
-
-.btn-google {
-    background: #4285f4;
-    margin-top: 10px;
-}
-
-.btn-google:hover:not(:disabled) {
-    background: #3367d6;
-}
-
-.btn-outline {
-    background: transparent;
-    border: 1.5px solid var(--border-medium);
-    color: var(--text-bright);
-}
-
-.btn-outline:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: var(--border-strong);
-}
-
-/* Tamanhos de botões */
-.btn-sm {
-    padding: 8px 14px;
-    font-size: 12px;
-    border-radius: 6px;
-}
-
-.btn-xs {
-    padding: 5px 10px;
-    font-size: 10px;
-    border-radius: 5px;
-}
-
-.btn-lg {
-    padding: 14px 24px;
-    font-size: 16px;
-    border-radius: var(--radius-md);
-}
-
-.btn-block {
-    width: 100%;
-}
-
-/* Botão de ícone */
+/* Botão de Ícone */
 .btn-icon {
     background: none;
     border: none;
@@ -452,17 +431,11 @@ input, textarea, select {
     justify-content: center;
 }
 
-.btn-icon:hover {
-    background: var(--bg-hover);
-    color: var(--text-bright);
-}
-
-.btn-icon:active {
-    background: var(--bg-active);
-}
+.btn-icon:hover { background: var(--bg-hover); color: var(--text-bright); }
+.btn-icon:active { background: var(--bg-active); }
 
 /* =============================================
-   DIVISOR
+   10. DIVISOR E MENSAGENS DE ERRO
    ============================================= */
 .divider {
     display: flex;
@@ -473,22 +446,15 @@ input, textarea, select {
     user-select: none;
 }
 
-.divider::before,
-.divider::after {
+.divider::before, .divider::after {
     content: '';
     flex: 1;
     height: 1px;
     background: var(--border-medium);
 }
 
-.divider span {
-    margin: 0 10px;
-    white-space: nowrap;
-}
+.divider span { margin: 0 10px; white-space: nowrap; }
 
-/* =============================================
-   MENSAGEM DE ERRO
-   ============================================= */
 .error-msg {
     color: var(--red);
     font-size: 12px;
@@ -499,7 +465,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   APLICAÇÃO PRINCIPAL
+   11. APLICAÇÃO PRINCIPAL
    ============================================= */
 #app-container {
     display: none;
@@ -512,7 +478,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   TOPBAR MOBILE
+   12. TOPBAR MOBILE
    ============================================= */
 .topbar {
     display: none;
@@ -521,7 +487,7 @@ input, textarea, select {
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid var(--border-subtle);
-    min-height: 52px;
+    min-height: var(--topbar-height);
     z-index: var(--z-topbar);
     flex-shrink: 0;
     padding-top: calc(10px + var(--safe-top));
@@ -541,9 +507,7 @@ input, textarea, select {
     line-height: 1;
 }
 
-.topbar .hamburger-btn:active {
-    background: var(--bg-hover);
-}
+.topbar .hamburger-btn:active { background: var(--bg-hover); }
 
 .topbar .topbar-title {
     font-weight: 700;
@@ -556,7 +520,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   LAYOUT PRINCIPAL
+   13. LAYOUT PRINCIPAL
    ============================================= */
 .app-layout {
     display: flex;
@@ -565,11 +529,11 @@ input, textarea, select {
 }
 
 /* =============================================
-   SIDEBAR
+   14. SIDEBAR
    ============================================= */
 .sidebar {
-    width: 270px;
-    min-width: 270px;
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
     background: var(--bg-secondary);
     display: flex;
     flex-direction: column;
@@ -579,7 +543,6 @@ input, textarea, select {
     height: 100%;
 }
 
-/* Cabeçalho da Sidebar */
 .sidebar-header {
     padding: 16px;
     border-bottom: 1px solid var(--border-subtle);
@@ -602,7 +565,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   NAVEGAÇÃO
+   15. NAVEGAÇÃO (GRID DE BOTÕES)
    ============================================= */
 .nav-grid {
     display: grid;
@@ -643,7 +606,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   LISTAS DE SERVIDORES E CANAIS
+   16. LISTAS DE SERVIDORES E CANAIS
    ============================================= */
 .server-list-section {
     padding: 10px 12px;
@@ -672,8 +635,7 @@ input, textarea, select {
     user-select: none;
 }
 
-.server-item,
-.channel-item {
+.server-item, .channel-item {
     padding: 8px 10px;
     margin: 2px 0;
     border-radius: 6px;
@@ -687,14 +649,12 @@ input, textarea, select {
     position: relative;
 }
 
-.server-item:hover,
-.channel-item:hover {
+.server-item:hover, .channel-item:hover {
     background: var(--bg-hover);
     color: var(--text-bright);
 }
 
-.server-item.active,
-.channel-item.active {
+.server-item.active, .channel-item.active {
     background: var(--bg-active);
     color: var(--text-bright);
 }
@@ -723,7 +683,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   RODAPÉ DA SIDEBAR
+   17. RODAPÉ DA SIDEBAR
    ============================================= */
 .sidebar-footer {
     padding: 10px 14px;
@@ -735,6 +695,9 @@ input, textarea, select {
     flex-shrink: 0;
 }
 
+/* =============================================
+   18. AVATARES
+   ============================================= */
 .avatar-sm {
     width: 32px;
     height: 32px;
@@ -759,6 +722,7 @@ input, textarea, select {
     border-radius: var(--radius-full);
     background: var(--green);
     border: 2px solid var(--bg-secondary);
+    animation: onlinePulse 2s infinite;
 }
 
 .sidebar-footer .user-name {
@@ -772,7 +736,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   ÁREA PRINCIPAL
+   19. ÁREA PRINCIPAL
    ============================================= */
 .main-area {
     flex: 1;
@@ -784,7 +748,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   CHAT VIEW
+   20. CHAT VIEW
    ============================================= */
 #chat-view {
     display: flex;
@@ -792,7 +756,6 @@ input, textarea, select {
     height: 100%;
 }
 
-/* Cabeçalho do Chat */
 .chat-header {
     padding: 12px 18px;
     border-bottom: 1px solid var(--border-subtle);
@@ -818,7 +781,9 @@ input, textarea, select {
     white-space: nowrap;
 }
 
-/* Área de Mensagens */
+/* =============================================
+   21. ÁREA DE MENSAGENS
+   ============================================= */
 .chat-messages {
     flex: 1;
     padding: 16px 18px;
@@ -830,7 +795,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   MENSAGENS
+   22. MENSAGEM INDIVIDUAL
    ============================================= */
 .message {
     display: flex;
@@ -859,6 +824,7 @@ input, textarea, select {
     margin-top: 2px;
     position: relative;
     overflow: visible;
+    cursor: pointer;
 }
 
 .avatar-frame {
@@ -873,17 +839,6 @@ input, textarea, select {
 .avatar-frame.nitro-glow {
     border-color: var(--purple);
     animation: nitroGlow 2s ease-in-out infinite;
-}
-
-@keyframes nitroGlow {
-    0%, 100% { 
-        box-shadow: 0 0 5px rgba(139, 92, 246, 0.3);
-        border-color: var(--purple);
-    }
-    50% { 
-        box-shadow: 0 0 18px rgba(139, 92, 246, 0.7);
-        border-color: #a78bfa;
-    }
 }
 
 /* Conteúdo da Mensagem */
@@ -905,7 +860,7 @@ input, textarea, select {
     font-size: 14px;
     color: var(--text-bright);
     cursor: pointer;
-    transition: color var(--transition-fast);
+    transition: all var(--transition-fast);
 }
 
 .message-username:hover {
@@ -922,7 +877,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   BADGES
+   23. BADGES
    ============================================= */
 .badge-tag {
     font-size: 9px;
@@ -937,39 +892,16 @@ input, textarea, select {
     line-height: 1.2;
 }
 
-.badge-tag.bot {
-    background: var(--blurple);
-    color: white;
-}
+.badge-tag.bot { background: var(--blurple); color: white; }
+.badge-tag.system { background: #52525b; color: white; }
+.badge-tag.nitro { background: var(--gradient-nitro); color: white; }
+.badge-tag.vip { background: var(--gradient-gold); color: #000; font-weight: 800; }
+.badge-tag.og { background: #000; color: var(--yellow); border: 1px solid var(--yellow); }
+.badge-tag.botmaster { background: var(--gradient-sunset); color: white; }
 
-.badge-tag.system {
-    background: #52525b;
-    color: white;
-}
-
-.badge-tag.nitro {
-    background: var(--gradient-nitro);
-    color: white;
-}
-
-.badge-tag.vip {
-    background: var(--gradient-gold);
-    color: #000;
-    font-weight: 800;
-}
-
-.badge-tag.og {
-    background: #000;
-    color: var(--yellow);
-    border: 1px solid var(--yellow);
-}
-
-.badge-tag.botmaster {
-    background: var(--gradient-sunset);
-    color: white;
-}
-
-/* Hora da Mensagem */
+/* =============================================
+   24. HORA E TEXTO DA MENSAGEM
+   ============================================= */
 .message-time {
     font-size: 10px;
     color: var(--text-muted);
@@ -977,7 +909,6 @@ input, textarea, select {
     margin-left: auto;
 }
 
-/* Texto da Mensagem */
 .message-text {
     font-size: 14px;
     line-height: 1.55;
@@ -985,7 +916,7 @@ input, textarea, select {
     color: var(--text-normal);
 }
 
-/* Menções */
+/* Menções e Código */
 .mention {
     color: var(--text-link);
     background: var(--blurple-light);
@@ -1000,18 +931,17 @@ input, textarea, select {
     background: rgba(99, 102, 241, 0.25);
 }
 
-/* Código Inline */
 .code-inline {
     background: rgba(0, 0, 0, 0.3);
     padding: 2px 6px;
     border-radius: 4px;
-    font-family: 'Consolas', 'Courier New', 'Fira Code', monospace;
+    font-family: 'Consolas', 'Courier New', monospace;
     font-size: 13px;
     color: var(--pink);
 }
 
 /* =============================================
-   REAÇÕES
+   25. REAÇÕES
    ============================================= */
 .reactions-row {
     display: flex;
@@ -1039,9 +969,7 @@ input, textarea, select {
     transform: scale(1.05);
 }
 
-.reaction-badge:active {
-    transform: scale(0.95);
-}
+.reaction-badge:active { transform: scale(0.95); }
 
 .reaction-badge.active {
     background: var(--blurple-light);
@@ -1049,7 +977,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   INPUT DE CHAT
+   26. INPUT DE CHAT
    ============================================= */
 .chat-input-area {
     padding: 10px 16px;
@@ -1070,7 +998,7 @@ input, textarea, select {
     color: var(--text-bright);
     font-size: 14px;
     outline: none;
-    min-height: 42px;
+    min-height: var(--chat-input-height);
     max-height: 100px;
     resize: none;
     transition: all var(--transition-fast);
@@ -1109,12 +1037,10 @@ input, textarea, select {
     box-shadow: 0 4px 15px var(--blurple-glow);
 }
 
-.send-btn:active {
-    transform: scale(0.9);
-}
+.send-btn:active { transform: scale(0.9); }
 
 /* =============================================
-   PAINÉIS
+   27. PAINÉIS (AMIGOS, BOTS, NITRO, ETC)
    ============================================= */
 .panel {
     flex: 1;
@@ -1143,7 +1069,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   CARDS
+   28. CARDS
    ============================================= */
 .card {
     background: var(--bg-secondary);
@@ -1154,9 +1080,7 @@ input, textarea, select {
     transition: border var(--transition-fast);
 }
 
-.card:hover {
-    border-color: var(--border-medium);
-}
+.card:hover { border-color: var(--border-medium); }
 
 .card p {
     font-size: 13px;
@@ -1165,7 +1089,7 @@ input, textarea, select {
 }
 
 /* =============================================
-   CARD NITRO
+   29. CARD NITRO (PREMIUM)
    ============================================= */
 .nitro-card {
     background: var(--gradient-nitro);
@@ -1196,31 +1120,12 @@ input, textarea, select {
     pointer-events: none;
 }
 
-.nitro-card h3 {
-    font-size: 22px;
-    color: white;
-    position: relative;
-    z-index: 1;
-}
-
-.nitro-card .nitro-price {
-    font-size: 32px;
-    font-weight: 800;
-    position: relative;
-    z-index: 1;
-    margin: 8px 0;
-}
-
-.nitro-card .nitro-features {
-    position: relative;
-    z-index: 1;
-    font-size: 13px;
-    opacity: 0.9;
-    line-height: 1.8;
-}
+.nitro-card h3 { font-size: 22px; color: white; position: relative; z-index: 1; }
+.nitro-card .nitro-price { font-size: 32px; font-weight: 800; position: relative; z-index: 1; margin: 8px 0; }
+.nitro-card .nitro-features { position: relative; z-index: 1; font-size: 13px; opacity: 0.9; line-height: 1.8; }
 
 /* =============================================
-   ITEMS DE LISTA
+   30. ITEMS DE LISTA (AMIGOS, MEMBROS)
    ============================================= */
 .list-item {
     display: flex;
@@ -1253,39 +1158,15 @@ input, textarea, select {
     position: relative;
 }
 
-.list-item .list-item-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.list-item .list-item-name {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-bright);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.list-item .list-item-sub {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
-
-.list-item .list-item-actions {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-}
+.list-item .list-item-info { flex: 1; min-width: 0; }
+.list-item .list-item-name { font-weight: 600; font-size: 14px; color: var(--text-bright); }
+.list-item .list-item-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.list-item .list-item-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
 /* =============================================
-   LOJA / SHOP
+   31. LOJA / SHOP
    ============================================= */
-.shop-grid {
-    display: grid;
-    gap: 10px;
-}
+.shop-grid { display: grid; gap: 10px; }
 
 .shop-item {
     display: flex;
@@ -1299,38 +1180,14 @@ input, textarea, select {
     gap: 12px;
 }
 
-.shop-item:hover {
-    border-color: var(--border-medium);
-    background: var(--bg-card);
-}
-
-.shop-item .shop-item-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.shop-item .shop-item-name {
-    font-weight: 600;
-    color: var(--text-bright);
-    font-size: 14px;
-}
-
-.shop-item .shop-item-desc {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
-
-.shop-item .shop-item-price {
-    font-weight: 700;
-    color: var(--yellow);
-    font-size: 15px;
-    margin-right: 10px;
-    white-space: nowrap;
-}
+.shop-item:hover { border-color: var(--border-medium); background: var(--bg-card); }
+.shop-item .shop-item-info { flex: 1; min-width: 0; }
+.shop-item .shop-item-name { font-weight: 600; color: var(--text-bright); font-size: 14px; }
+.shop-item .shop-item-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.shop-item .shop-item-price { font-weight: 700; color: var(--yellow); font-size: 15px; margin-right: 10px; white-space: nowrap; }
 
 /* =============================================
-   CÓDIGO DE CONVITE
+   32. CÓDIGO DE CONVITE
    ============================================= */
 .invite-code-display {
     background: var(--bg-input);
@@ -1349,13 +1206,10 @@ input, textarea, select {
     user-select: all;
 }
 
-.invite-code-display:hover {
-    background: var(--bg-tertiary);
-    border-color: var(--green);
-}
+.invite-code-display:hover { background: var(--bg-tertiary); border-color: var(--green); }
 
 /* =============================================
-   TOKEN DISPLAY
+   33. TOKEN DISPLAY
    ============================================= */
 .token-display {
     background: var(--bg-input);
@@ -1373,10 +1227,7 @@ input, textarea, select {
     transition: all var(--transition-fast);
 }
 
-.token-display:hover {
-    color: var(--text-bright);
-    background: var(--bg-tertiary);
-}
+.token-display:hover { color: var(--text-bright); background: var(--bg-tertiary); }
 
 .copied-tooltip {
     position: absolute;
@@ -1394,12 +1245,10 @@ input, textarea, select {
     z-index: 10;
 }
 
-.copied-tooltip.show {
-    opacity: 1;
-}
+.copied-tooltip.show { opacity: 1; }
 
 /* =============================================
-   ESTADO VAZIO
+   34. ESTADO VAZIO
    ============================================= */
 .empty-state {
     display: flex;
@@ -1414,26 +1263,12 @@ input, textarea, select {
     padding: 40px;
 }
 
-.empty-state .icon {
-    font-size: 60px;
-    margin-bottom: 8px;
-    opacity: 0.6;
-}
-
-.empty-state .empty-title {
-    font-weight: 600;
-    color: var(--text-bright);
-    font-size: 16px;
-}
-
-.empty-state .empty-desc {
-    font-size: 13px;
-    max-width: 300px;
-    line-height: 1.5;
-}
+.empty-state .icon { font-size: 60px; margin-bottom: 8px; opacity: 0.6; }
+.empty-state .empty-title { font-weight: 600; color: var(--text-bright); font-size: 16px; }
+.empty-state .empty-desc { font-size: 13px; max-width: 300px; line-height: 1.5; }
 
 /* =============================================
-   MODAIS
+   35. MODAIS
    ============================================= */
 .modal-overlay {
     display: none;
@@ -1445,11 +1280,6 @@ input, textarea, select {
     align-items: center;
     padding: 20px;
     animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
 }
 
 .modal {
@@ -1465,32 +1295,11 @@ input, textarea, select {
     animation: modalSlideIn 0.3s ease;
 }
 
-@keyframes modalSlideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
+.modal h3 { margin-bottom: 16px; color: var(--text-bright); font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
 
-.modal h3 {
-    margin-bottom: 16px;
-    color: var(--text-bright);
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-}
+.modal .form-group { margin-bottom: 12px; }
 
-.modal .form-group {
-    margin-bottom: 12px;
-}
-
-.modal input,
-.modal textarea,
-.modal select {
+.modal input, .modal textarea, .modal select {
     width: 100%;
     padding: 10px 12px;
     background: var(--bg-input);
@@ -1503,24 +1312,14 @@ input, textarea, select {
     font-family: inherit;
 }
 
-.modal input:focus,
-.modal textarea:focus,
-.modal select:focus {
+.modal input:focus, .modal textarea:focus, .modal select:focus {
     border-color: var(--blurple);
     box-shadow: 0 0 0 3px var(--blurple-light);
 }
 
-.modal textarea {
-    resize: vertical;
-    min-height: 70px;
-}
+.modal textarea { resize: vertical; min-height: 70px; }
 
-.modal-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 12px;
-}
+.modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
 
 .btn-cancel {
     background: #52525b;
@@ -1535,9 +1334,7 @@ input, textarea, select {
     transition: background var(--transition-fast);
 }
 
-.btn-cancel:hover {
-    background: #3f3f46;
-}
+.btn-cancel:hover { background: #3f3f46; }
 
 .btn-confirm {
     background: var(--blurple);
@@ -1552,13 +1349,10 @@ input, textarea, select {
     transition: all var(--transition-fast);
 }
 
-.btn-confirm:hover {
-    background: var(--blurple-hover);
-    box-shadow: 0 4px 15px var(--blurple-glow);
-}
+.btn-confirm:hover { background: var(--blurple-hover); box-shadow: 0 4px 15px var(--blurple-glow); }
 
 /* =============================================
-   TOAST
+   36. TOAST (NOTIFICAÇÕES)
    ============================================= */
 .toast {
     position: fixed;
@@ -1583,23 +1377,12 @@ input, textarea, select {
     text-overflow: ellipsis;
 }
 
-.toast.show {
-    opacity: 1;
-}
-
-.toast.error {
-    background: var(--red);
-    border-color: var(--red);
-}
-
-.toast.success {
-    background: var(--green);
-    border-color: var(--green);
-    color: #000;
-}
+.toast.show { opacity: 1; }
+.toast.error { background: var(--red); border-color: var(--red); }
+.toast.success { background: var(--green); border-color: var(--green); color: #000; }
 
 /* =============================================
-   SIDEBAR OVERLAY (MOBILE) - CORRIGIDO
+   37. SIDEBAR OVERLAY (MOBILE)
    ============================================= */
 .sidebar-overlay {
     display: none;
@@ -1610,37 +1393,201 @@ input, textarea, select {
     animation: fadeIn 0.3s ease;
 }
 
-.sidebar-overlay.show {
-    display: block;
-}
+.sidebar-overlay.show { display: block; }
 
 /* =============================================
-   RESPONSIVIDADE - TABLET
+   38. PERFIL MODAL (SISTEMA DE PERFIS)
+   ============================================= */
+.profile-modal-wrapper {
+    max-width: 500px;
+    padding: 0;
+    overflow: hidden;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.profile-close-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+}
+
+.profile-close-btn:hover { background: rgba(0, 0, 0, 0.7); }
+
+.profile-header {
+    padding: 30px 20px 20px;
+    text-align: center;
+}
+
+.profile-avatar-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 700;
+    color: white;
+    border: 4px solid var(--bg-secondary);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    margin: 0 auto;
+}
+
+.profile-status-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-full);
+    border: 3px solid var(--bg-secondary);
+}
+
+.profile-status-dot.online { background: var(--green); }
+.profile-status-dot.offline { background: #747f8d; }
+
+.profile-username {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-bright);
+    margin-top: 8px;
+}
+
+.profile-username.nitro-name {
+    background: var(--gradient-nitro);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.profile-body { padding: 16px 20px; }
+
+.profile-section {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.profile-section:last-child { border-bottom: none; }
+
+.profile-section h4 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.profile-bio { color: var(--text-normal); font-size: 14px; line-height: 1.6; }
+
+.profile-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.stat-item {
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+}
+
+.stat-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+.stat-value { font-size: 16px; font-weight: 700; color: var(--text-bright); display: block; }
+.stat-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; }
+
+.badge-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-tertiary);
+    padding: 4px 8px;
+    border-radius: 12px;
+    margin: 2px;
+    font-size: 11px;
+    color: var(--text-bright);
+}
+
+.mutual-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-bright);
+    transition: background var(--transition-fast);
+}
+
+.mutual-item:hover { background: var(--bg-hover); }
+
+.mutual-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.profile-dates { font-size: 12px; }
+
+.date-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    color: var(--text-muted);
+}
+
+.date-item span:last-child { color: var(--text-bright); font-weight: 500; }
+
+.profile-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 8px;
+}
+
+.profile-actions .btn { flex: 1; min-width: 100px; }
+
+/* =============================================
+   39. RESPONSIVIDADE - TABLET
    ============================================= */
 @media (max-width: 1024px) {
-    .panel {
-        padding: 16px 18px;
-    }
-    
-    .panel h2 {
-        font-size: 20px;
-    }
-    
-    .card {
-        padding: 16px;
-    }
+    .panel { padding: 16px 18px; }
+    .panel h2 { font-size: 20px; }
+    .card { padding: 16px; }
 }
 
 /* =============================================
-   RESPONSIVIDADE - MOBILE
+   40. RESPONSIVIDADE - MOBILE
    ============================================= */
 @media (max-width: 768px) {
-    /* Mostrar topbar */
-    .topbar {
-        display: flex;
-    }
+    .topbar { display: flex; }
 
-    /* Sidebar como drawer - CORRIGIDO */
     .sidebar {
         position: fixed;
         left: 0;
@@ -1653,274 +1600,63 @@ input, textarea, select {
         box-shadow: var(--shadow-xl);
     }
 
-    .sidebar.open {
-        transform: translateX(0);
-    }
+    .sidebar.open { transform: translateX(0); }
 
-    /* Ajustes do chat */
-    .chat-messages {
-        padding: 10px 12px;
-    }
+    .chat-messages { padding: 10px 12px; }
+    .chat-input-area { padding: 8px 10px; padding-bottom: calc(8px + var(--safe-bottom)); }
+    .chat-input { font-size: 13px; padding: 8px 14px; min-height: 38px; }
+    .send-btn { width: 38px; height: 38px; font-size: 16px; }
 
-    .chat-input-area {
-        padding: 8px 10px;
-        padding-bottom: calc(8px + var(--safe-bottom));
-    }
+    .message { gap: 10px; padding: 4px 6px; }
+    .message-avatar { width: 32px; height: 32px; min-width: 32px; font-size: 13px; }
+    .avatar-frame { inset: -2px; }
+    .message-username { font-size: 13px; }
+    .message-text { font-size: 13px; }
+    .chat-header { padding: 10px 14px; min-height: 44px; font-size: 13px; }
 
-    .chat-input {
-        font-size: 13px;
-        padding: 8px 14px;
-        min-height: 38px;
-    }
+    .panel { padding: 14px; }
+    .panel h2 { font-size: 20px; margin-bottom: 16px; }
+    .panel h3 { font-size: 15px; }
+    .card { padding: 14px; margin-bottom: 14px; }
 
-    .send-btn {
-        width: 38px;
-        height: 38px;
-        font-size: 16px;
-    }
+    .nav-grid { gap: 4px; padding: 8px; }
+    .nav-btn { font-size: 9px; padding: 8px 4px; }
 
-    /* Ajustes das mensagens */
-    .message {
-        gap: 10px;
-        padding: 4px 6px;
-    }
+    .auth-box { padding: 24px 16px; }
+    .auth-box h1 { font-size: 24px; }
 
-    .message-avatar {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
-        font-size: 13px;
-    }
+    .modal { max-width: 94vw; padding: 18px; }
+    .modal h3 { font-size: 18px; }
 
-    .avatar-frame {
-        inset: -2px;
-    }
+    .shop-item { flex-wrap: wrap; gap: 8px; padding: 12px; }
+    .shop-item .shop-item-price { font-size: 13px; }
 
-    .message-username {
-        font-size: 13px;
-    }
+    .list-item { padding: 10px; gap: 10px; }
+    .list-item .list-item-avatar { width: 32px; height: 32px; font-size: 12px; }
 
-    .message-text {
-        font-size: 13px;
-    }
+    .nitro-card { padding: 18px; }
+    .nitro-card .nitro-price { font-size: 26px; }
 
-    .chat-header {
-        padding: 10px 14px;
-        min-height: 44px;
-        font-size: 13px;
-    }
-
-    /* Painéis */
-    .panel {
-        padding: 14px;
-    }
-
-    .panel h2 {
-        font-size: 20px;
-        margin-bottom: 16px;
-    }
-
-    .panel h3 {
-        font-size: 15px;
-    }
-
-    .card {
-        padding: 14px;
-        margin-bottom: 14px;
-    }
-
-    /* Navegação */
-    .nav-grid {
-        gap: 4px;
-        padding: 8px;
-    }
-
-    .nav-btn {
-        font-size: 9px;
-        padding: 8px 4px;
-    }
-
-    /* Autenticação */
-    .auth-box {
-        padding: 24px 16px;
-    }
-
-    .auth-box h1 {
-        font-size: 24px;
-    }
-
-    /* Modais */
-    .modal {
-        max-width: 94vw;
-        padding: 18px;
-    }
-
-    .modal h3 {
-        font-size: 18px;
-    }
-
-    /* Shop items */
-    .shop-item {
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: 12px;
-    }
-
-    .shop-item .shop-item-price {
-        font-size: 13px;
-    }
-
-    /* List items */
-    .list-item {
-        padding: 10px;
-        gap: 10px;
-    }
-
-    .list-item .list-item-avatar {
-        width: 32px;
-        height: 32px;
-        font-size: 12px;
-    }
-
-    /* Nitro card */
-    .nitro-card {
-        padding: 18px;
-    }
-
-    .nitro-card .nitro-price {
-        font-size: 26px;
-    }
-
-    /* Toast */
-    .toast {
-        bottom: 70px;
-        font-size: 12px;
-        padding: 10px 18px;
-    }
+    .toast { bottom: 70px; font-size: 12px; padding: 10px 18px; }
 }
 
 /* =============================================
-   RESPONSIVIDADE - TELAS MUITO PEQUENAS
+   41. RESPONSIVIDADE - TELAS PEQUENAS
    ============================================= */
 @media (max-width: 360px) {
-    .sidebar {
-        width: 260px;
-    }
-
-    .nav-btn {
-        font-size: 8px;
-        padding: 6px 2px;
-    }
-
-    .chat-input {
-        font-size: 12px;
-    }
-
-    .message-avatar {
-        width: 28px;
-        height: 28px;
-        min-width: 28px;
-        font-size: 11px;
-    }
-
-    .message-username {
-        font-size: 12px;
-    }
-
-    .message-text {
-        font-size: 12px;
-    }
+    .sidebar { width: 260px; }
+    .nav-btn { font-size: 8px; padding: 6px 2px; }
+    .chat-input { font-size: 12px; }
+    .message-avatar { width: 28px; height: 28px; min-width: 28px; font-size: 11px; }
+    .message-username { font-size: 12px; }
+    .message-text { font-size: 12px; }
 }
 
 /* =============================================
-   ANIMAÇÕES GLOBAIS
-   ============================================= */
-@keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-    100% {
-        background-position: 200% 0;
-    }
-}
-
-.skeleton {
-    background: linear-gradient(
-        90deg,
-        var(--bg-tertiary) 25%,
-        var(--bg-card) 50%,
-        var(--bg-tertiary) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s ease-in-out infinite;
-    border-radius: var(--radius-sm);
-}
-
-/* =============================================
-   UTILITÁRIOS
-   ============================================= */
-.text-center { text-align: center; }
-.text-left { text-align: left; }
-.text-right { text-align: right; }
-
-.text-sm { font-size: 12px; }
-.text-xs { font-size: 10px; }
-.text-lg { font-size: 16px; }
-.text-xl { font-size: 20px; }
-
-.text-muted { color: var(--text-muted); }
-.text-bright { color: var(--text-bright); }
-.text-blurple { color: var(--blurple); }
-.text-green { color: var(--green); }
-.text-red { color: var(--red); }
-.text-yellow { color: var(--yellow); }
-
-.font-bold { font-weight: 700; }
-.font-semibold { font-weight: 600; }
-.font-normal { font-weight: 400; }
-
-.mt-0 { margin-top: 0; }
-.mt-1 { margin-top: 4px; }
-.mt-2 { margin-top: 8px; }
-.mt-3 { margin-top: 12px; }
-.mt-4 { margin-top: 16px; }
-.mt-5 { margin-top: 20px; }
-
-.mb-0 { margin-bottom: 0; }
-.mb-1 { margin-bottom: 4px; }
-.mb-2 { margin-bottom: 8px; }
-.mb-3 { margin-bottom: 12px; }
-.mb-4 { margin-bottom: 16px; }
-
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.items-center { align-items: center; }
-.justify-between { justify-content: space-between; }
-.justify-center { justify-content: center; }
-.gap-1 { gap: 4px; }
-.gap-2 { gap: 8px; }
-.gap-3 { gap: 12px; }
-.gap-4 { gap: 16px; }
-
-.w-full { width: 100%; }
-.h-full { height: 100%; }
-
-.truncate {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.hidden { display: none; }
-.visible { display: block; }
-
-/* =============================================
-   ACESSIBILIDADE
+   42. ACESSIBILIDADE
    ============================================= */
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
+    *, *::before, *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
@@ -1944,3 +1680,63 @@ input, textarea, select {
     white-space: nowrap;
     border-width: 0;
 }
+
+/* =============================================
+   43. SKELETON LOADING
+   ============================================= */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--bg-tertiary) 25%,
+        var(--bg-card) 50%,
+        var(--bg-tertiary) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+
+/* =============================================
+   44. UTILITÁRIOS
+   ============================================= */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+.text-sm { font-size: 12px; }
+.text-xs { font-size: 10px; }
+.text-lg { font-size: 16px; }
+.text-xl { font-size: 20px; }
+.text-muted { color: var(--text-muted); }
+.text-bright { color: var(--text-bright); }
+.text-blurple { color: var(--blurple); }
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.text-yellow { color: var(--yellow); }
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-normal { font-weight: 400; }
+.mt-0 { margin-top: 0; }
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 16px; }
+.mt-5 { margin-top: 20px; }
+.mb-0 { margin-bottom: 0; }
+.mb-1 { margin-bottom: 4px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 12px; }
+.mb-4 { margin-bottom: 16px; }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hidden { display: none; }
+.visible { display: block; }
