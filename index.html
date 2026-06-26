@@ -3,2810 +3,541 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cord - Chat Completo</title>
+    
+    <!-- SEO -->
+    <title>Cord - Rede Social Completa</title>
+    <meta name="description" content="Cord - A rede social definitiva com chat, amigos, bots personalizados e Nitro!">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <style>
-        :root {
-            --bg-primary: #36393f;
-            --bg-secondary: #2f3136;
-            --bg-tertiary: #40444b;
-            --text-normal: #dcddde;
-            --text-muted: #b9bbbe;
-            --blurple: #5865f2;
-            --blurple-hover: #4752c4;
-            --green: #57f287;
-            --red: #ed4245;
-            --yellow: #fee75c;
-            --orange: #faa81a;
-            --input-bg: #202225;
-            --safe-bottom: env(safe-area-inset-bottom, 0px);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-normal);
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            user-select: none;
-            position: fixed;
-            inset: 0;
-        }
-
-        /* ============ AUTENTICAÇÃO ============ */
-        #auth-container {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-primary);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .auth-box {
-            background: var(--bg-secondary);
-            padding: 30px 24px;
-            border-radius: 14px;
-            width: 100%;
-            max-width: 430px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-
-        .auth-box h1 {
-            font-size: 28px;
-            margin-bottom: 6px;
-            color: white;
-            text-align: center;
-            letter-spacing: -0.5px;
-        }
-
-        .auth-box .subtitle {
-            text-align: center;
-            color: var(--text-muted);
-            margin-bottom: 22px;
-            font-size: 14px;
-        }
-
-        .auth-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-            background: var(--input-bg);
-        }
-
-        .auth-tab {
-            flex: 1;
-            padding: 11px;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .auth-tab.active {
-            background: var(--blurple);
-            color: white;
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-            letter-spacing: 0.5px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            background: var(--input-bg);
-            border: 1px solid transparent;
-            border-radius: 6px;
-            color: white;
-            font-size: 15px;
-            outline: none;
-            transition: border 0.2s;
-        }
-
-        .form-group input:focus {
-            border-color: var(--blurple);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 13px;
-            border: none;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: white;
-        }
-
-        .btn-primary {
-            background: var(--blurple);
-        }
-
-        .btn-primary:hover {
-            background: var(--blurple-hover);
-        }
-
-        .btn-primary:active {
-            transform: scale(0.97);
-        }
-
-        .btn-danger {
-            background: var(--red);
-        }
-
-        .btn-danger:hover {
-            background: #c03537;
-        }
-
-        .btn-google {
-            background: #4285f4;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-google:hover {
-            background: #3367d6;
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 13px;
-            width: auto;
-            border-radius: 5px;
-        }
-
-        .btn-xs {
-            padding: 5px 10px;
-            font-size: 11px;
-            width: auto;
-            border-radius: 4px;
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 18px 0;
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--bg-tertiary);
-        }
-
-        .divider span {
-            margin: 0 12px;
-        }
-
-        .error-msg {
-            color: var(--red);
-            font-size: 13px;
-            margin-top: 6px;
-            display: none;
-        }
-
-        /* ============ APP PRINCIPAL ============ */
-        #app-container {
-            display: none;
-            height: 100vh;
-            height: 100dvh;
-            flex-direction: column;
-            position: fixed;
-            inset: 0;
-        }
-
-        /* Topbar Mobile */
-        .topbar {
-            display: none;
-            background: var(--bg-secondary);
-            padding: 8px 14px;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #202225;
-            min-height: 50px;
-            z-index: 50;
-            flex-shrink: 0;
-        }
-
-        .hamburger {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 6px;
-            border-radius: 4px;
-        }
-
-        .hamburger:active {
-            background: rgba(255,255,255,0.1);
-        }
-
-        .app-layout {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 260px;
-            min-width: 260px;
-            background: var(--bg-secondary);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #202225;
-            transition: transform 0.3s ease;
-            z-index: 100;
-        }
-
-        .sidebar-header {
-            padding: 14px;
-            border-bottom: 1px solid #202225;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-        }
-
-        .sidebar-header h3 {
-            font-size: 15px;
-            color: white;
-            font-weight: 700;
-        }
-
-        /* Navegação */
-        .nav-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 4px;
-            padding: 10px;
-            flex-shrink: 0;
-        }
-
-        .nav-btn {
-            padding: 9px 6px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 10px;
-            font-weight: 700;
-            background: var(--bg-tertiary);
-            color: var(--text-muted);
-            transition: all 0.2s;
-            text-align: center;
-            letter-spacing: -0.3px;
-        }
-
-        .nav-btn.active {
-            background: var(--blurple);
-            color: white;
-            transform: scale(1.03);
-        }
-
-        .nav-btn:hover {
-            background: #555a63;
-            color: white;
-        }
-
-        .nav-btn.active:hover {
-            background: var(--blurple-hover);
-        }
-
-        .server-list-section {
-            padding: 10px;
-            overflow-y: auto;
-            max-height: 35%;
-            flex-shrink: 0;
-        }
-
-        .channel-list-section {
-            padding: 10px;
-            overflow-y: auto;
-            flex: 1;
-        }
-
-        .section-title {
-            font-size: 10px;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .server-item,
-        .channel-item {
-            padding: 7px 10px;
-            margin: 2px 0;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-muted);
-        }
-
-        .server-item:hover,
-        .channel-item:hover {
-            background: #35373c;
-            color: white;
-        }
-
-        .server-item.active {
-            background: #42464d;
-            color: white;
-        }
-
-        .channel-item.active {
-            background: #42464d;
-            color: white;
-        }
-
-        .server-icon {
-            width: 13px;
-            height: 13px;
-            border-radius: 50%;
-            background: #747f8d;
-            flex-shrink: 0;
-        }
-
-        .server-item.active .server-icon {
-            background: var(--green);
-        }
-
-        .hash {
-            color: var(--text-muted);
-            font-weight: 700;
-            font-size: 17px;
-        }
-
-        .sidebar-footer {
-            padding: 10px 14px;
-            border-top: 1px solid #202225;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #292b2f;
-            flex-shrink: 0;
-        }
-
-        .avatar-sm {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 13px;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .sidebar-footer .username {
-            font-size: 13px;
-            font-weight: 600;
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        /* Área Principal */
-        .main-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-primary);
-            min-width: 0;
-            overflow: hidden;
-        }
-
-        /* Chat */
-        #chat-view {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .chat-header {
-            padding: 12px 18px;
-            border-bottom: 1px solid #202225;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-height: 48px;
-            font-weight: 600;
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-
-        .chat-messages {
-            flex: 1;
-            padding: 14px 18px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .message {
-            display: flex;
-            gap: 12px;
-            padding: 4px 0;
-            border-radius: 4px;
-            transition: background 0.15s;
-        }
-
-        .message:hover {
-            background: rgba(255,255,255,0.02);
-        }
-
-        .message-avatar {
-            width: 38px;
-            height: 38px;
-            min-width: 38px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 15px;
-            margin-top: 2px;
-        }
-
-        .message-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .message-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 3px;
-            flex-wrap: wrap;
-        }
-
-        .message-username {
-            font-weight: 600;
-            font-size: 14px;
-            color: white;
-        }
-
-        .bot-tag {
-            background: var(--blurple);
-            color: white;
-            font-size: 9px;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-weight: 700;
-        }
-
-        .system-tag {
-            background: #747f8d;
-            color: white;
-            font-size: 9px;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-weight: 700;
-        }
-
-        .message-time {
-            font-size: 10px;
-            color: var(--text-muted);
-        }
-
-        .message-text {
-            font-size: 14px;
-            line-height: 1.5;
-            word-break: break-word;
-        }
-
-        .mention {
-            color: #7289da;
-            background: rgba(114,137,218,0.1);
-            padding: 0 2px;
-            border-radius: 3px;
-            cursor: pointer;
-        }
-
-        .code {
-            background: var(--input-bg);
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Consolas', monospace;
-            font-size: 13px;
-        }
-
-        .reactions {
-            display: flex;
-            gap: 5px;
-            margin-top: 5px;
-            flex-wrap: wrap;
-        }
-
-        .reaction {
-            background: var(--bg-tertiary);
-            padding: 3px 7px;
-            border-radius: 10px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-
-        .reaction:hover {
-            background: #555a63;
-        }
-
-        .reaction.active {
-            background: rgba(88,101,242,0.2);
-            border-color: var(--blurple);
-        }
-
-        /* Input de Chat */
-        .chat-input-area {
-            padding: 10px 16px;
-            display: flex;
-            gap: 10px;
-            align-items: flex-end;
-            flex-shrink: 0;
-            background: var(--bg-primary);
-            padding-bottom: calc(10px + var(--safe-bottom));
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 11px 16px;
-            background: var(--input-bg);
-            border: none;
-            border-radius: 22px;
-            color: white;
-            font-size: 14px;
-            outline: none;
-            min-height: 42px;
-            max-height: 100px;
-            resize: none;
-            transition: box-shadow 0.2s;
-        }
-
-        .chat-input:focus {
-            box-shadow: 0 0 0 2px var(--blurple);
-        }
-
-        .send-btn {
-            background: var(--blurple);
-            border: none;
-            border-radius: 50%;
-            width: 42px;
-            height: 42px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .send-btn:hover {
-            background: var(--blurple-hover);
-        }
-
-        .send-btn:active {
-            transform: scale(0.9);
-        }
-
-        /* ============ PAINÉIS ============ */
-        .panel {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: none;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .panel h2 {
-            color: white;
-            margin-bottom: 18px;
-            font-size: 22px;
-            letter-spacing: -0.5px;
-        }
-
-        .dash-section {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 18px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .dash-section h3 {
-            color: white;
-            margin-bottom: 12px;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .dash-section p {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        /* Cards de Bot */
-        .bot-card {
-            background: var(--bg-tertiary);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            flex-wrap: wrap;
-            border: 1px solid rgba(255,255,255,0.03);
-        }
-
-        .bot-info {
-            flex: 1;
-            min-width: 130px;
-        }
-
-        .bot-name {
-            font-weight: 600;
-            color: white;
-            font-size: 15px;
-        }
-
-        .bot-status {
-            font-size: 11px;
-            margin-top: 3px;
-            font-weight: 600;
-        }
-
-        .bot-status.online {
-            color: var(--green);
-        }
-
-        .bot-status.offline {
-            color: var(--text-muted);
-        }
-
-        .token-display {
-            background: var(--input-bg);
-            padding: 7px 12px;
-            border-radius: 5px;
-            font-family: 'Consolas', monospace;
-            font-size: 11px;
-            color: var(--text-muted);
-            word-break: break-all;
-            max-width: 210px;
-            cursor: pointer;
-            position: relative;
-            transition: color 0.2s;
-        }
-
-        .token-display:hover {
-            color: white;
-        }
-
-        .copied-tooltip {
-            position: absolute;
-            top: -24px;
-            right: 0;
-            background: var(--green);
-            color: #000;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 700;
-            opacity: 0;
-            transition: opacity 0.2s;
-            pointer-events: none;
-        }
-
-        .copied-tooltip.show {
-            opacity: 1;
-        }
-
-        /* Loja / Ranking */
-        .shop-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            margin-bottom: 6px;
-        }
-
-        .rank-item {
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 14px;
-        }
-
-        .rank-pos {
-            font-weight: 700;
-            color: var(--yellow);
-            width: 25px;
-        }
-
-        /* Convites */
-        .invite-code {
-            background: var(--input-bg);
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-family: 'Consolas', monospace;
-            font-size: 18px;
-            letter-spacing: 3px;
-            text-align: center;
-            color: var(--green);
-            font-weight: 700;
-            margin: 8px 0;
-        }
-
-        /* Jogos */
-        .game-area {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-top: 8px;
-        }
-
-        .game-input {
-            padding: 8px 12px;
-            background: var(--input-bg);
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 14px;
-            width: 90px;
-            outline: none;
-        }
-
-        .game-select {
-            padding: 8px 12px;
-            background: var(--input-bg);
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 14px;
-            outline: none;
-        }
-
-        .game-result {
-            margin-top: 10px;
-            font-size: 18px;
-            letter-spacing: 3px;
-            min-height: 30px;
-        }
-
-        /* Selects */
-        .custom-select {
-            width: 100%;
-            padding: 10px;
-            background: var(--input-bg);
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 13px;
-            margin-bottom: 8px;
-            outline: none;
-        }
-
-        .custom-select:focus {
-            box-shadow: 0 0 0 2px var(--blurple);
-        }
-
-        .custom-input {
-            width: 100%;
-            padding: 10px;
-            background: var(--input-bg);
-            border: none;
-            border-radius: 6px;
-            color: white;
-            font-size: 13px;
-            margin-bottom: 8px;
-            outline: none;
-        }
-
-        .custom-input:focus {
-            box-shadow: 0 0 0 2px var(--blurple);
-        }
-
-        /* Estado Vazio */
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-muted);
-            gap: 10px;
-            font-size: 15px;
-            text-align: center;
-        }
-
-        .empty-state .icon {
-            font-size: 55px;
-            margin-bottom: 5px;
-        }
-
-        /* ============ MODAIS ============ */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.75);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal {
-            background: var(--bg-secondary);
-            border-radius: 14px;
-            padding: 24px;
-            width: 100%;
-            max-width: 450px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        .modal h3 {
-            margin-bottom: 14px;
-            color: white;
-            font-size: 20px;
-        }
-
-        .modal input,
-        .modal textarea,
-        .modal select {
-            width: 100%;
-            padding: 11px;
-            background: var(--input-bg);
-            border: none;
-            border-radius: 6px;
-            color: white;
-            margin-bottom: 10px;
-            font-size: 14px;
-            outline: none;
-            font-family: inherit;
-        }
-
-        .modal textarea {
-            resize: vertical;
-            min-height: 70px;
-        }
-
-        .modal input:focus,
-        .modal textarea:focus,
-        .modal select:focus {
-            box-shadow: 0 0 0 2px var(--blurple);
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 10px;
-        }
-
-        .btn-cancel {
-            background: #747f8d;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .btn-confirm {
-            background: var(--blurple);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #18191c;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 24px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 300;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        .toast.error {
-            background: var(--red);
-        }
-
-        /* ============ MOBILE ============ */
-        @media (max-width: 768px) {
-            .topbar {
-                display: flex;
-            }
-
-            .sidebar {
-                position: fixed;
-                left: 0;
-                top: 0;
-                height: 100vh;
-                height: 100dvh;
-                z-index: 150;
-                transform: translateX(-100%);
-                width: 285px;
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.6);
-                z-index: 140;
-            }
-
-            .sidebar-overlay.show {
-                display: block;
-            }
-
-            .chat-messages {
-                padding: 10px 12px;
-            }
-
-            .chat-input-area {
-                padding: 8px 10px;
-                padding-bottom: calc(8px + var(--safe-bottom));
-            }
-
-            .message-avatar {
-                width: 30px;
-                height: 30px;
-                min-width: 30px;
-                font-size: 12px;
-            }
-
-            .message-username {
-                font-size: 12px;
-            }
-
-            .message-text {
-                font-size: 13px;
-            }
-
-            .chat-header {
-                padding: 8px 14px;
-                min-height: 42px;
-                font-size: 13px;
-            }
-
-            .panel {
-                padding: 14px;
-            }
-
-            .nav-buttons {
-                gap: 3px;
-                padding: 8px;
-            }
-
-            .nav-btn {
-                font-size: 9px;
-                padding: 7px 4px;
-            }
-
-            .auth-box {
-                padding: 22px 16px;
-            }
-
-            .modal {
-                max-width: 94vw;
-                padding: 18px;
-            }
-        }
-    </style>
+    
+    <!-- Folha de Estilos -->
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-<!-- ==================== AUTENTICAÇÃO ==================== -->
-<div id="auth-container">
-    <div class="auth-box">
-        <h1>🐺 Cord</h1>
-        <p class="subtitle">Chat completo com bots, economia, jogos e mais!</p>
-        
-        <div class="auth-tabs">
-            <button class="auth-tab active" onclick="switchAuthTab('login')" id="tab-login">Entrar</button>
-            <button class="auth-tab" onclick="switchAuthTab('register')" id="tab-register">Registar</button>
-        </div>
-
-        <!-- Formulário de Login -->
-        <form id="form-login" onsubmit="handleLogin(event)">
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="login-email" placeholder="exemplo@email.com" required>
-            </div>
-            <div class="form-group">
-                <label>Senha</label>
-                <input type="password" id="login-password" placeholder="••••••••" required>
-            </div>
-            <p class="error-msg" id="login-error"></p>
-            <button type="submit" class="btn btn-primary">Entrar</button>
-        </form>
-
-        <!-- Formulário de Registo -->
-        <form id="form-register" onsubmit="handleRegister(event)" style="display:none;">
-            <div class="form-group">
-                <label>Nome de utilizador</label>
-                <input type="text" id="reg-username" placeholder="Como te chamas?" required minlength="3">
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="reg-email" placeholder="exemplo@email.com" required>
-            </div>
-            <div class="form-group">
-                <label>Senha</label>
-                <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required minlength="6">
-            </div>
-            <p class="error-msg" id="reg-error"></p>
-            <button type="submit" class="btn btn-primary">Criar Conta</button>
-        </form>
-
-        <div class="divider"><span>ou</span></div>
-        <button class="btn btn-google" onclick="loginWithGoogle()">
-            <span style="font-size:18px;">G</span> Continuar com Google
-        </button>
-    </div>
-</div>
-
-<!-- ==================== APLICAÇÃO PRINCIPAL ==================== -->
-<div id="app-container">
-    <!-- Topbar Mobile -->
-    <div class="topbar">
-        <button class="hamburger" onclick="toggleSidebar()">☰</button>
-        <span style="font-weight:700;font-size:15px;" id="topbar-title">Cord</span>
-        <div class="avatar-sm" id="avatar-top" style="width:32px;height:32px;"></div>
-    </div>
-
-    <!-- Overlay da Sidebar -->
-    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
-
-    <div class="app-layout">
-        <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h3>🐺 Cord</h3>
-                <button class="btn btn-sm btn-primary" onclick="showServerModal()" style="padding:5px 10px;font-size:17px;">+</button>
-            </div>
-
-            <!-- Navegação -->
-            <div class="nav-buttons">
-                <button class="nav-btn active" onclick="switchView('chat')">💬 Chat</button>
-                <button class="nav-btn" onclick="switchView('dashboard')">🤖 Bots</button>
-                <button class="nav-btn" onclick="switchView('economy')">💰 Eco</button>
-                <button class="nav-btn" onclick="switchView('games')">🎮 Jogos</button>
-                <button class="nav-btn" onclick="switchView('members')">👥 Memb</button>
-                <button class="nav-btn" onclick="switchView('settings')">⚙️ Def</button>
-            </div>
-
-            <!-- Lista de Servidores -->
-            <div class="server-list-section">
-                <div class="section-title">SERVIDORES</div>
-                <div id="server-list"></div>
-            </div>
-
-            <!-- Lista de Canais -->
-            <div class="channel-list-section">
-                <div class="section-title">
-                    CANAIS
-                    <button class="btn btn-xs btn-primary" onclick="showChannelModal()">+</button>
-                </div>
-                <div id="channel-list"></div>
-            </div>
-
-            <!-- Rodapé da Sidebar -->
-            <div class="sidebar-footer">
-                <div class="avatar-sm" id="avatar-footer"></div>
-                <span class="username" id="username-footer"></span>
-                <button onclick="logout()" title="Sair" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:4px;">🚪</button>
-            </div>
-        </div>
-
-        <!-- Área Principal -->
-        <div class="main-area">
-            <!-- ===== CHAT ===== -->
-            <div id="chat-view">
-                <div class="chat-header">
-                    <span class="hash">#</span>
-                    <span id="current-channel-name">Seleciona um canal</span>
-                </div>
-                <div class="chat-messages" id="chat-box">
-                    <div class="empty-state">
-                        <span class="icon">💬</span>
-                        <span>Seleciona um servidor e um canal</span>
-                        <span style="font-size:13px;color:var(--text-muted);">Usa !help para ver comandos</span>
-                    </div>
-                </div>
-                <div class="chat-input-area">
-                    <input class="chat-input" id="msg-input" placeholder="Escreve uma mensagem... (!help)" onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}" />
-                    <button class="send-btn" onclick="sendMsg()">➤</button>
-                </div>
-            </div>
-
-            <!-- ===== PAINEL DE BOTS ===== -->
-            <div class="panel" id="dashboard-view" style="display:none;">
-                <h2>🤖 Dashboard de Bots</h2>
-                
-                <div class="dash-section">
-                    <h3>➕ Criar Novo Bot</h3>
-                    <div class="form-group">
-                        <label>Nome do Bot</label>
-                        <input class="custom-input" id="new-bot-name" placeholder="Ex: MeuBot Incrível" maxlength="30">
-                    </div>
-                    <div class="form-group">
-                        <label>Descrição</label>
-                        <input class="custom-input" id="new-bot-desc" placeholder="O que este bot faz?">
-                    </div>
-                    <button class="btn btn-primary" onclick="createBot()" style="width:auto;margin-top:6px;">Criar Bot 🤖</button>
-                </div>
-
-                <div class="dash-section">
-                    <h3>📋 Meus Bots</h3>
-                    <div id="my-bots-list">
-                        <p style="color:var(--text-muted);text-align:center;padding:15px;">Nenhum bot criado ainda. Cria um acima! 👆</p>
-                    </div>
-                </div>
-
-                <div class="dash-section">
-                    <h3>🔌 Adicionar Bot ao Servidor</h3>
-                    <select class="custom-select" id="select-bot-to-add">
-                        <option value="">Seleciona um bot...</option>
-                    </select>
-                    <select class="custom-select" id="select-server-to-add">
-                        <option value="">Seleciona um servidor...</option>
-                    </select>
-                    <button class="btn btn-sm btn-primary" onclick="addBotToServer()" style="width:auto;">Adicionar ao Servidor</button>
-                </div>
-
-                <div class="dash-section" style="background:#1a1a2f; border: 1px solid #2a2a5c;">
-                    <h3>📖 Como usar o bot no Termux</h3>
-                    <p>
-                        1. Cria um bot acima e <b>copia o Token</b><br>
-                        2. Adiciona o bot a um servidor<br>
-                        3. No Termux, instala Node.js:<br>
-                        <code style="background:#111;padding:3px 7px;border-radius:3px;font-size:12px;">pkg install nodejs -y</code><br>
-                        4. Usa o script do bot (fornecido antes)<br>
-                        5. Executa e vê a magia! ✨
-                    </p>
-                </div>
-            </div>
-
-            <!-- ===== PAINEL DE ECONOMIA ===== -->
-            <div class="panel" id="economy-view" style="display:none;">
-                <h2>💰 Economia</h2>
-                
-                <div class="dash-section">
-                    <h3>💳 A tua Carteira</h3>
-                    <p>Saldo atual: <b style="color:var(--yellow);font-size:18px;" id="user-balance">0</b> 🪙 CordCoins</p>
-                    <button class="btn btn-sm btn-primary" onclick="dailyReward()" style="width:auto;margin-top:10px;">🎁 Recompensa Diária</button>
-                    <p style="font-size:11px;margin-top:6px;">Bónus diário: 50-100 🪙</p>
-                </div>
-
-                <div class="dash-section">
-                    <h3>🏪 Loja</h3>
-                    <div id="shop-items">
-                        <p style="color:var(--text-muted);">A carregar loja...</p>
-                    </div>
-                </div>
-
-                <div class="dash-section">
-                    <h3>🏆 Ranking Global</h3>
-                    <div id="ranking-list">
-                        <p style="color:var(--text-muted);">A carregar ranking...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PAINEL DE JOGOS ===== -->
-            <div class="panel" id="games-view" style="display:none;">
-                <h2>🎮 Jogos de Casino</h2>
-                
-                <div class="dash-section">
-                    <h3>🎰 Slot Machine</h3>
-                    <p>Custo: <b>10 🪙</b> por jogada</p>
-                    <div class="game-result" id="slot-result"></div>
-                    <button class="btn btn-sm btn-primary" onclick="playSlot()" style="width:auto;margin-top:10px;">🎰 Girar Slot</button>
-                </div>
-
-                <div class="dash-section">
-                    <h3>🎲 Roleta</h3>
-                    <p>Aposta e ganha <b>2x</b> (ou <b>14x</b> no verde!)</p>
-                    <div class="game-area">
-                        <input class="game-input" id="roulette-bet" type="number" placeholder="Aposta" min="1" value="10">
-                        <select class="game-select" id="roulette-color">
-                            <option value="red">🔴 Vermelho</option>
-                            <option value="black">⚫ Preto</option>
-                            <option value="green">🟢 Verde (14x)</option>
-                        </select>
-                        <button class="btn btn-sm btn-primary" onclick="playRoulette()">🎲 Apostar</button>
-                    </div>
-                    <div id="roulette-result" style="margin-top:10px;"></div>
-                </div>
-
-                <div class="dash-section">
-                    <h3>🎯 Adivinha o Número</h3>
-                    <p>Custo: <b>5 🪙</b> | Prémio: <b>50 🪙</b></p>
-                    <div class="game-area">
-                        <input class="game-input" id="guess-number" type="number" placeholder="1-10" min="1" max="10">
-                        <button class="btn btn-sm btn-primary" onclick="playGuess()">🎯 Tentar</button>
-                    </div>
-                    <div id="guess-result" style="margin-top:10px;"></div>
-                </div>
-            </div>
-
-            <!-- ===== PAINEL DE MEMBROS ===== -->
-            <div class="panel" id="members-view" style="display:none;">
-                <h2>👥 Membros do Servidor</h2>
-                
-                <div class="dash-section">
-                    <h3>🔗 Sistema de Convites</h3>
-                    <p style="font-size:12px;">Código de convite atual:</p>
-                    <div class="invite-code" id="invite-code-display">Nenhum</div>
-                    <button class="btn btn-sm btn-primary" onclick="generateInvite()" style="width:auto;">🔗 Gerar Novo Convite</button>
-                    
-                    <div style="margin-top:12px;">
-                        <p style="font-size:12px;margin-bottom:4px;">Entrar com código:</p>
-                        <input class="custom-input" id="join-invite-code" placeholder="Código de convite" style="width:100%;">
-                        <button class="btn btn-sm btn-primary" onclick="joinServerByInvite()" style="width:auto;">Entrar no Servidor</button>
-                    </div>
-                </div>
-
-                <div class="dash-section">
-                    <h3>👤 Lista de Membros</h3>
-                    <div id="members-list">
-                        <p style="color:var(--text-muted);">Seleciona um servidor primeiro</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ===== PAINEL DE DEFINIÇÕES ===== -->
-            <div class="panel" id="settings-view" style="display:none;">
-                <h2>⚙️ Definições</h2>
-                
-                <div class="dash-section">
-                    <h3>👤 Perfil</h3>
-                    <div class="form-group">
-                        <label>Nome de utilizador</label>
-                        <input class="custom-input" id="settings-username" placeholder="O teu nome">
-                    </div>
-                    <div class="form-group">
-                        <label>Bio</label>
-                        <textarea class="custom-input" id="settings-bio" placeholder="Sobre ti..." rows="2" style="resize:vertical;"></textarea>
-                    </div>
-                    <button class="btn btn-sm btn-primary" onclick="saveProfile()" style="width:auto;">💾 Guardar Alterações</button>
-                </div>
-
-                <div class="dash-section">
-                    <h3>🎨 Tema</h3>
-                    <select class="custom-select" id="theme-select" onchange="changeTheme(this.value)">
-                        <option value="dark">🌙 Escuro (Padrão)</option>
-                        <option value="light">☀️ Claro</option>
-                        <option value="midnight">🌑 Meia-Noite</option>
-                    </select>
-                </div>
-
-                <div class="dash-section">
-                    <h3>📦 O teu Inventário</h3>
-                    <div id="inventory-list">
-                        <p style="color:var(--text-muted);">Itens comprados na loja aparecem aqui</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ==================== MODAIS ==================== -->
-<!-- Modal Criar Servidor -->
-<div class="modal-overlay" id="server-modal">
-    <div class="modal">
-        <h3>Criar Servidor</h3>
-        <input id="server-name" placeholder="Nome do servidor" maxlength="50">
-        <div class="modal-buttons">
-            <button class="btn-cancel" onclick="closeModal('server-modal')">Cancelar</button>
-            <button class="btn-confirm" onclick="createServer()">Criar Servidor</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal Criar Canal -->
-<div class="modal-overlay" id="channel-modal">
-    <div class="modal">
-        <h3>Criar Canal</h3>
-        <input id="channel-name" placeholder="Nome do canal" maxlength="30">
-        <div class="modal-buttons">
-            <button class="btn-cancel" onclick="closeModal('channel-modal')">Cancelar</button>
-            <button class="btn-confirm" onclick="createChannel()">Criar Canal</button>
-        </div>
-    </div>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<!-- ==================== SCRIPTS ==================== -->
-<script>
-    // ============ INICIALIZAÇÃO FIREBASE ============
-    firebase.initializeApp({
-        apiKey: "AIzaSyCnRAOY08ABtG87T2ioDM4lzYgDB6q3rBw",
-        authDomain: "cord-c6f05.firebaseapp.com",
-        projectId: "cord-c6f05",
-        storageBucket: "cord-c6f05.firebasestorage.app",
-        messagingSenderId: "777848965663",
-        appId: "1:777848965663:web:03c1631fc8899f773c632a"
-    });
-
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    
-    // Ativar persistência offline
-    db.enablePersistence().catch(() => {
-        console.log('Persistência offline não disponível');
-    });
-
-    // ============ VARIÁVEIS GLOBAIS ============
-    let currentUser = null;
-    let currentServer = null;
-    let currentChannel = null;
-    let unsubMessages = null;
-    let currentView = 'chat';
-
-    // ============ AUTENTICAÇÃO ============
-    function switchAuthTab(tab) {
-        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
-        document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-        document.getElementById('tab-' + tab).classList.add('active');
-        document.getElementById('login-error').style.display = 'none';
-        document.getElementById('reg-error').style.display = 'none';
-    }
-
-    async function handleLogin(e) {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value.trim();
-        const password = document.getElementById('login-password').value;
-        const errorEl = document.getElementById('login-error');
-        errorEl.style.display = 'none';
-
-        try {
-            await auth.signInWithEmailAndPassword(email, password);
-        } catch (err) {
-            errorEl.textContent = translateError(err.code);
-            errorEl.style.display = 'block';
-        }
-    }
-
-    async function handleRegister(e) {
-        e.preventDefault();
-        const username = document.getElementById('reg-username').value.trim();
-        const email = document.getElementById('reg-email').value.trim();
-        const password = document.getElementById('reg-password').value;
-        const errorEl = document.getElementById('reg-error');
-        errorEl.style.display = 'none';
-
-        if (username.length < 3) {
-            errorEl.textContent = 'Nome de utilizador muito curto (mínimo 3 caracteres)';
-            errorEl.style.display = 'block';
-            return;
-        }
-
-        try {
-            const cred = await auth.createUserWithEmailAndPassword(email, password);
-            await cred.user.updateProfile({ displayName: username });
-            await db.collection('users').doc(cred.user.uid).set({
-                username: username,
-                email: email,
-                balance: 100,
-                lastDaily: null,
-                bio: '',
-                inventory: [],
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-        } catch (err) {
-            errorEl.textContent = translateError(err.code);
-            errorEl.style.display = 'block';
-        }
-    }
-
-    async function loginWithGoogle() {
-        try {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            const cred = await auth.signInWithPopup(provider);
-            await db.collection('users').doc(cred.user.uid).set({
-                username: cred.user.displayName || 'Usuário Google',
-                email: cred.user.email,
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
-        } catch (err) {
-            showToast('Erro ao entrar com Google. Tenta de novo.', true);
-        }
-    }
-
-    function logout() {
-        auth.signOut();
-    }
-
-    function translateError(code) {
-        const errors = {
-            'auth/user-not-found': 'Email não encontrado',
-            'auth/wrong-password': 'Senha incorreta',
-            'auth/email-already-in-use': 'Este email já está registado',
-            'auth/invalid-email': 'Email inválido',
-            'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres)',
-            'auth/too-many-requests': 'Muitas tentativas. Aguarda um pouco.',
-            'auth/network-request-failed': 'Erro de rede. Verifica a tua internet.'
-        };
-        return errors[code] || 'Erro desconhecido. Tenta novamente.';
-    }
-
-    // ============ OBSERVADOR DE AUTENTICAÇÃO ============
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            currentUser = user;
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('app-container').style.display = 'flex';
-
-            const initial = (user.displayName || user.email)[0].toUpperCase();
-            const color = stringToColor(user.displayName || user.email);
-
-            // Atualizar avatares
-            ['avatar-top', 'avatar-footer'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.textContent = initial;
-                    el.style.background = color;
-                }
-            });
-
-            document.getElementById('username-footer').textContent = user.displayName || user.email.split('@')[0];
-            document.getElementById('topbar-title').textContent = user.displayName || 'Cord';
-
-            // Carregar dados
-            loadServers();
-            loadAllPanels();
-        } else {
-            currentUser = null;
-            document.getElementById('auth-container').style.display = 'flex';
-            document.getElementById('app-container').style.display = 'none';
+    <!-- =============================================
+         CONTAINER DE AUTENTICAÇÃO
+         ============================================= -->
+    <div id="auth-container">
+        <div class="auth-box">
+            <span class="logo-icon">🐺</span>
+            <h1>Cord</h1>
+            <p class="subtitle">A rede social completa • Chat, Amigos, Bots &amp; Nitro</p>
             
-            if (unsubMessages) {
-                unsubMessages();
-                unsubMessages = null;
-            }
-        }
-    });
-
-    // ============ NAVEGAÇÃO DE VIEWS ============
-    function switchView(view) {
-        currentView = view;
-
-        // Esconder todas as views
-        const views = ['chat-view', 'dashboard-view', 'economy-view', 'games-view', 'members-view', 'settings-view'];
-        views.forEach(v => {
-            const el = document.getElementById(v);
-            if (el) {
-                el.style.display = 'none';
-            }
-        });
-
-        // Mostrar a view selecionada
-        const selectedView = document.getElementById(view + '-view');
-        if (selectedView) {
-            selectedView.style.display = view === 'chat' ? 'flex' : 'block';
-        }
-
-        // Atualizar botões de navegação
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        const navButtons = document.querySelectorAll('.nav-btn');
-        const buttonMap = {
-            'chat': 0,
-            'dashboard': 1,
-            'economy': 2,
-            'games': 3,
-            'members': 4,
-            'settings': 5
-        };
-        if (navButtons[buttonMap[view]]) {
-            navButtons[buttonMap[view]].classList.add('active');
-        }
-
-        // Carregar dados específicos da view
-        if (view === 'economy') loadEconomyPanel();
-        if (view === 'games') loadGamesPanel();
-        if (view === 'members') loadMembersPanel();
-        if (view === 'settings') loadSettingsPanel();
-        if (view === 'dashboard') {
-            loadMyBots();
-            loadBotServerSelects();
-        }
-
-        // Fechar sidebar no mobile
-        if (window.innerWidth <= 768 && document.getElementById('sidebar').classList.contains('open')) {
-            toggleSidebar();
-        }
-    }
-
-    function loadAllPanels() {
-        loadEconomyPanel();
-        loadGamesPanel();
-        loadMembersPanel();
-        loadSettingsPanel();
-        loadMyBots();
-        loadBotServerSelects();
-    }
-
-    // ============ SERVIDORES E CANAIS ============
-    function loadServers() {
-        if (!currentUser) return;
-
-        db.collection('servers')
-            .where('members', 'array-contains', currentUser.uid)
-            .onSnapshot(snapshot => {
-                const list = document.getElementById('server-list');
-                list.innerHTML = '';
-
-                if (snapshot.empty) {
-                    list.innerHTML = '<p style="color:#b9bbbe;font-size:11px;padding:8px;">Cria um servidor!</p>';
-                    return;
-                }
-
-                snapshot.forEach(doc => {
-                    const server = doc.data();
-                    const div = document.createElement('div');
-                    div.className = 'server-item';
-                    div.innerHTML = `<span class="server-icon"></span> ${escapeHtml(server.name)}`;
-                    div.onclick = () => selectServer(doc.id, server.name);
-
-                    if (currentServer === doc.id) {
-                        div.classList.add('active');
-                    }
-
-                    list.appendChild(div);
-                });
-            });
-    }
-
-    function selectServer(serverId, serverName) {
-        currentServer = serverId;
-        currentChannel = null;
-
-        document.getElementById('channel-list').innerHTML = '';
-        document.getElementById('chat-box').innerHTML = `
-            <div class="empty-state">
-                <span class="icon">💬</span>
-                <span>Seleciona um canal</span>
-            </div>`;
-        document.getElementById('current-channel-name').textContent = 'Seleciona um canal';
-
-        if (unsubMessages) {
-            unsubMessages();
-            unsubMessages = null;
-        }
-
-        loadChannels(serverId);
-        switchView('chat');
-
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
-        }
-    }
-
-    function loadChannels(serverId) {
-        db.collection('servers')
-            .doc(serverId)
-            .collection('channels')
-            .orderBy('createdAt')
-            .onSnapshot(snapshot => {
-                const list = document.getElementById('channel-list');
-                list.innerHTML = '';
-
-                snapshot.forEach(doc => {
-                    const channel = doc.data();
-                    const div = document.createElement('div');
-                    div.className = 'channel-item';
-                    div.innerHTML = `<span class="hash">#</span> ${escapeHtml(channel.name)}`;
-                    div.onclick = () => selectChannel(serverId, doc.id, channel.name);
-
-                    if (currentChannel === doc.id) {
-                        div.classList.add('active');
-                    }
-
-                    list.appendChild(div);
-                });
-            });
-    }
-
-    function selectChannel(serverId, channelId, channelName) {
-        currentChannel = channelId;
-        document.getElementById('current-channel-name').textContent = channelName;
-
-        if (unsubMessages) {
-            unsubMessages();
-        }
-
-        unsubMessages = db.collection('servers')
-            .doc(serverId)
-            .collection('channels')
-            .doc(channelId)
-            .collection('messages')
-            .orderBy('timestamp', 'asc')
-            .onSnapshot(snapshot => {
-                const box = document.getElementById('chat-box');
-                box.innerHTML = '';
-
-                if (snapshot.empty) {
-                    box.innerHTML = `
-                        <div class="empty-state">
-                            <span class="icon">📭</span>
-                            <span>Nenhuma mensagem ainda</span>
-                            <span style="font-size:12px;">Sê o primeiro a escrever!</span>
-                        </div>`;
-                    return;
-                }
-
-                snapshot.forEach(doc => {
-                    renderMessage(doc.data(), doc.id);
-                });
-
-                box.scrollTop = box.scrollHeight;
-            }, err => {
-                showToast('Erro ao carregar mensagens', true);
-            });
-
-        if (window.innerWidth <= 768) {
-            toggleSidebar();
-        }
-    }
-
-    // ============ MENSAGENS ============
-    function renderMessage(msg, msgId) {
-        const box = document.getElementById('chat-box');
-        
-        // Remover estado vazio se existir
-        if (box.querySelector('.empty-state')) {
-            box.innerHTML = '';
-        }
-
-        const div = document.createElement('div');
-        div.className = 'message';
-
-        const avatarColor = msg.isBot ? '#5865f2' : (msg.isSystem ? '#747f8d' : stringToColor(msg.autor));
-        const avatarLetter = (msg.autor || '?')[0].toUpperCase();
-        const tag = msg.isBot ? '<span class="bot-tag">BOT</span>' : (msg.isSystem ? '<span class="system-tag">SYS</span>' : '');
-        
-        let time = '';
-        if (msg.timestamp) {
-            time = new Date(msg.timestamp.toDate()).toLocaleTimeString('pt-PT', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-
-        // Reações
-        const reactions = msg.reactions || {};
-        let reactionsHtml = '';
-        Object.entries(reactions).forEach(([emoji, users]) => {
-            const isActive = users.includes(currentUser.uid);
-            reactionsHtml += `
-                <span class="reaction ${isActive ? 'active' : ''}" 
-                      onclick="toggleReaction('${msgId}', '${emoji}')">
-                    ${emoji} ${users.length}
-                </span>`;
-        });
-
-        if (reactionsHtml) {
-            reactionsHtml = `<div class="reactions">${reactionsHtml}</div>`;
-        }
-
-        div.innerHTML = `
-            <div class="message-avatar" style="background:${avatarColor};">${avatarLetter}</div>
-            <div class="message-content">
-                <div class="message-header">
-                    <span class="message-username">${escapeHtml(msg.autor)}</span>
-                    ${tag}
-                    <span class="message-time">${time}</span>
-                </div>
-                <div class="message-text">${formatText(escapeHtml(msg.texto))}</div>
-                ${reactionsHtml}
+            <!-- Tabs Login/Registo -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchAuthTab('login')" id="tab-login">
+                    Entrar
+                </button>
+                <button class="auth-tab" onclick="switchAuthTab('register')" id="tab-register">
+                    Registar
+                </button>
             </div>
-        `;
 
-        box.appendChild(div);
-    }
-
-    async function sendMsg() {
-        const input = document.getElementById('msg-input');
-        const texto = input.value.trim();
-
-        if (!texto || !currentServer || !currentChannel || !currentUser) return;
-
-        const msgData = {
-            autor: currentUser.displayName || currentUser.email.split('@')[0],
-            texto: texto,
-            userId: currentUser.uid,
-            isBot: false,
-            isSystem: false,
-            reactions: {},
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        try {
-            await db.collection('servers')
-                .doc(currentServer)
-                .collection('channels')
-                .doc(currentChannel)
-                .collection('messages')
-                .add(msgData);
-
-            handleCommands(texto);
-            input.value = '';
-            input.style.height = 'auto';
-        } catch (err) {
-            showToast('Erro ao enviar mensagem', true);
-        }
-    }
-
-    function handleCommands(texto) {
-        const lower = texto.toLowerCase().trim();
-
-        const commands = {
-            '!ping': () => sendSystemMessage('Pong! 🏓', 'Sistema'),
-            '!hora': () => sendSystemMessage(`🕐 Hora atual: ${new Date().toLocaleString('pt-PT')}`, 'Sistema'),
-            '!dado': () => sendSystemMessage(`🎲 O dado caiu em: **${Math.floor(Math.random() * 6) + 1}**`, 'Sistema'),
-            '!moeda': () => sendSystemMessage(`🪙 Resultado: **${Math.random() > 0.5 ? 'Cara' : 'Coroa'}**`, 'Sistema'),
-            '!coins': async () => {
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                const balance = userDoc.data().balance || 0;
-                sendSystemMessage(`💰 Tens **${balance}** 🪙 CordCoins`, 'Sistema');
-            },
-            '!rank': async () => {
-                const snapshot = await db.collection('users').orderBy('balance', 'desc').limit(5).get();
-                let message = '**🏆 Ranking Global:**';
-                snapshot.forEach((doc, i) => {
-                    const user = doc.data();
-                    message += `\n${i + 1}. **${user.username}** - ${user.balance || 0} 🪙`;
-                });
-                sendSystemMessage(message, 'Sistema');
-            },
-            '!help': () => {
-                sendSystemMessage(
-                    '**📖 Comandos Disponíveis:**\n' +
-                    '`!ping` - Pong!\n' +
-                    '`!hora` - Hora atual\n' +
-                    '`!dado` - Lança um dado\n' +
-                    '`!moeda` - Cara ou coroa\n' +
-                    '`!coins` - O teu saldo\n' +
-                    '`!rank` - Ranking global\n' +
-                    '`!serverinfo` - Info do servidor\n' +
-                    '`!help` - Esta lista',
-                    'Sistema'
-                );
-            },
-            '!serverinfo': async () => {
-                if (!currentServer) return;
-                const serverDoc = await db.collection('servers').doc(currentServer).get();
-                const server = serverDoc.data();
-                const botsSnapshot = await db.collection('bots').where('serverId', '==', currentServer).get();
-                sendSystemMessage(
-                    `📊 **${escapeHtml(server.name)}**\n` +
-                    `👥 Membros: ${(server.members || []).length}\n` +
-                    `🤖 Bots: ${botsSnapshot.size}\n` +
-                    `👑 Dono: ${server.ownerId === currentUser.uid ? 'Tu' : 'Outro'}`,
-                    'Sistema'
-                );
-            }
-        };
-
-        if (commands[lower]) {
-            commands[lower]();
-        }
-
-        // Verificar bots personalizados
-        checkCustomBots(texto);
-    }
-
-    async function checkCustomBots(texto) {
-        if (!currentServer) return;
-
-        try {
-            const botsSnapshot = await db.collection('bots')
-                .where('serverId', '==', currentServer)
-                .where('active', '==', true)
-                .get();
-
-            botsSnapshot.forEach(doc => {
-                const bot = doc.data();
-                const lower = texto.toLowerCase().trim();
-                if (bot.commands && bot.commands[lower]) {
-                    setTimeout(() => {
-                        sendBotMessage(bot.commands[lower], bot.name, doc.id);
-                    }, 300);
-                }
-            });
-        } catch (err) {
-            // Ignorar erros silenciosamente
-        }
-    }
-
-    function sendSystemMessage(texto, autor) {
-        if (!currentServer || !currentChannel) return;
-
-        db.collection('servers')
-            .doc(currentServer)
-            .collection('channels')
-            .doc(currentChannel)
-            .collection('messages')
-            .add({
-                autor: autor,
-                texto: texto,
-                userId: 'system',
-                isBot: false,
-                isSystem: true,
-                reactions: {},
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-    }
-
-    function sendBotMessage(texto, autor, botId) {
-        if (!currentServer || !currentChannel) return;
-
-        db.collection('servers')
-            .doc(currentServer)
-            .collection('channels')
-            .doc(currentChannel)
-            .collection('messages')
-            .add({
-                autor: autor,
-                texto: texto,
-                userId: botId || 'system',
-                isBot: true,
-                isSystem: false,
-                reactions: {},
-                timestamp: firebase.firestore.FieldValue.serverTimestamp()
-            });
-    }
-
-    async function toggleReaction(msgId, emoji) {
-        if (!currentServer || !currentChannel || !currentUser) return;
-
-        const ref = db.collection('servers')
-            .doc(currentServer)
-            .collection('channels')
-            .doc(currentChannel)
-            .collection('messages')
-            .doc(msgId);
-
-        try {
-            const snap = await ref.get();
-            if (!snap.exists) return;
-
-            const data = snap.data();
-            const reactions = data.reactions || {};
-
-            if (!reactions[emoji]) {
-                reactions[emoji] = [];
-            }
-
-            const index = reactions[emoji].indexOf(currentUser.uid);
-            if (index >= 0) {
-                reactions[emoji].splice(index, 1);
-            } else {
-                reactions[emoji].push(currentUser.uid);
-            }
-
-            if (reactions[emoji].length === 0) {
-                delete reactions[emoji];
-            }
-
-            await ref.update({ reactions });
-        } catch (err) {
-            showToast('Erro ao reagir', true);
-        }
-    }
-
-    // ============ PAINEL DE ECONOMIA ============
-    async function loadEconomyPanel() {
-        if (!currentUser) return;
-
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        const userData = userDoc.data();
-
-        document.getElementById('user-balance').textContent = userData.balance || 0;
-
-        loadShop();
-        loadRanking();
-    }
-
-    function loadShop() {
-        const items = [
-            { id: 'color_red', name: '🔴 Nome Vermelho', price: 200, type: 'color' },
-            { id: 'color_blue', name: '🔵 Nome Azul', price: 200, type: 'color' },
-            { id: 'color_green', name: '🟢 Nome Verde', price: 200, type: 'color' },
-            { id: 'badge_vip', name: '💎 Badge VIP', price: 500, type: 'badge' },
-            { id: 'badge_og', name: '👑 Badge OG', price: 1000, type: 'badge' },
-            { id: 'badge_botmaster', name: '🤖 Badge Bot Master', price: 750, type: 'badge' }
-        ];
-
-        const div = document.getElementById('shop-items');
-        div.innerHTML = '';
-
-        items.forEach(item => {
-            const itemDiv = document.createElement('div');
-            itemDiv.className = 'shop-item';
-            itemDiv.innerHTML = `
-                <div>
-                    <b>${item.name}</b>
-                    <div style="font-size:11px;color:var(--text-muted);">${item.type === 'color' ? 'Cor do nome' : 'Badge'}</div>
+            <!-- Formulário de Login -->
+            <form id="form-login" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="login-email" placeholder="exemplo@email.com" required autocomplete="email">
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="color:var(--yellow);font-weight:600;">${item.price} 🪙</span>
-                    <button class="btn btn-xs btn-primary" onclick="buyItem('${item.id}', '${item.name}', ${item.price}, '${item.type}')">Comprar</button>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
                 </div>
-            `;
-            div.appendChild(itemDiv);
-        });
-    }
-
-    async function buyItem(id, name, price, type) {
-        if (!currentUser) return;
-
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        const userData = userDoc.data();
-        const balance = userData.balance || 0;
-        const inventory = userData.inventory || [];
-
-        if (balance < price) {
-            showToast('Sem CordCoins suficientes! 💸', true);
-            return;
-        }
-
-        if (inventory.includes(id)) {
-            showToast('Já possuis este item!', true);
-            return;
-        }
-
-        try {
-            await db.collection('users').doc(currentUser.uid).update({
-                balance: firebase.firestore.FieldValue.increment(-price),
-                inventory: firebase.firestore.FieldValue.arrayUnion(id)
-            });
-
-            showToast(`Compraste ${name}! 🎉`);
-            loadEconomyPanel();
-            loadSettingsPanel();
-        } catch (err) {
-            showToast('Erro ao comprar', true);
-        }
-    }
-
-    async function loadRanking() {
-        const snapshot = await db.collection('users')
-            .orderBy('balance', 'desc')
-            .limit(10)
-            .get();
-
-        const div = document.getElementById('ranking-list');
-        div.innerHTML = '';
-
-        if (snapshot.empty) {
-            div.innerHTML = '<p style="color:var(--text-muted);">Nenhum utilizador ainda.</p>';
-            return;
-        }
-
-        snapshot.forEach((doc, i) => {
-            const user = doc.data();
-            const rankDiv = document.createElement('div');
-            rankDiv.className = 'rank-item';
-            rankDiv.innerHTML = `
-                <span class="rank-pos">#${i + 1}</span>
-                <span style="flex:1;">${escapeHtml(user.username)}</span>
-                <span style="color:var(--yellow);font-weight:600;">${user.balance || 0} 🪙</span>
-            `;
-            div.appendChild(rankDiv);
-        });
-    }
-
-    async function dailyReward() {
-        if (!currentUser) return;
-
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        const userData = userDoc.data();
-        const now = new Date();
-        const lastDaily = userData.lastDaily ? userData.lastDaily.toDate() : null;
-
-        if (lastDaily && now.toDateString() === lastDaily.toDateString()) {
-            showToast('Já recebeste a recompensa hoje! ⏰ Volta amanhã.', true);
-            return;
-        }
-
-        const reward = 50 + Math.floor(Math.random() * 51); // 50-100
-
-        try {
-            await db.collection('users').doc(currentUser.uid).update({
-                balance: firebase.firestore.FieldValue.increment(reward),
-                lastDaily: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            showToast(`Recebeste ${reward} 🪙 CordCoins! 🎁`);
-            loadEconomyPanel();
-        } catch (err) {
-            showToast('Erro ao receber recompensa', true);
-        }
-    }
-
-    // ============ PAINEL DE JOGOS ============
-    function loadGamesPanel() {
-        document.getElementById('slot-result').textContent = '';
-        document.getElementById('roulette-result').innerHTML = '';
-        document.getElementById('guess-result').textContent = '';
-    }
-
-    async function playSlot() {
-        if (!currentUser) return;
-
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        if ((userDoc.data().balance || 0) < 10) {
-            showToast('Precisas de 10 🪙 para jogar!', true);
-            return;
-        }
-
-        const emojis = ['🍒', '🍋', '🍊', '🍇', '💎', '7️⃣'];
-        const result = [
-            emojis[Math.floor(Math.random() * emojis.length)],
-            emojis[Math.floor(Math.random() * emojis.length)],
-            emojis[Math.floor(Math.random() * emojis.length)]
-        ];
-
-        document.getElementById('slot-result').textContent = result.join(' | ');
-
-        let winAmount = 0;
-        if (result[0] === result[1] && result[1] === result[2]) {
-            winAmount = result[0] === '7️⃣' ? 500 : result[0] === '💎' ? 200 : 100;
-        } else if (result[0] === result[1] || result[1] === result[2]) {
-            winAmount = 20;
-        }
-
-        const netGain = winAmount - 10;
-
-        try {
-            await db.collection('users').doc(currentUser.uid).update({
-                balance: firebase.firestore.FieldValue.increment(netGain)
-            });
-
-            if (winAmount > 0) {
-                showToast(`🎉 Ganhaste ${winAmount} 🪙!`);
-            } else {
-                showToast('Perdeste 10 🪙 😢');
-            }
-
-            loadEconomyPanel();
-        } catch (err) {
-            showToast('Erro no jogo', true);
-        }
-    }
-
-    async function playRoulette() {
-        if (!currentUser) return;
-
-        const bet = parseInt(document.getElementById('roulette-bet').value) || 0;
-        const color = document.getElementById('roulette-color').value;
-
-        if (bet < 1) {
-            showToast('Aposta inválida!', true);
-            return;
-        }
-
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        if ((userDoc.data().balance || 0) < bet) {
-            showToast('Sem moedas suficientes!', true);
-            return;
-        }
-
-        const number = Math.floor(Math.random() * 37);
-        let resultColor, resultNumber;
-
-        if (number === 0) {
-            resultColor = 'green';
-            resultNumber = 0;
-        } else if (number % 2 === 0) {
-            resultColor = 'red';
-            resultNumber = number;
-        } else {
-            resultColor = 'black';
-            resultNumber = number;
-        }
-
-        let winAmount = 0;
-        if (color === resultColor) {
-            winAmount = color === 'green' ? bet * 14 : bet * 2;
-            document.getElementById('roulette-result').innerHTML = `
-                <span style="color:var(--green);">Número: ${resultNumber} - 🎉 Ganhaste ${winAmount} 🪙!</span>`;
-        } else {
-            document.getElementById('roulette-result').innerHTML = `
-                <span style="color:var(--red);">Número: ${resultNumber} - Perdeste ${bet} 🪙</span>`;
-        }
-
-        try {
-            await db.collection('users').doc(currentUser.uid).update({
-                balance: firebase.firestore.FieldValue.increment(winAmount - bet)
-            });
-            loadEconomyPanel();
-        } catch (err) {
-            showToast('Erro na roleta', true);
-        }
-    }
-
-    async function playGuess() {
-        if (!currentUser) return;
-
-        const guess = parseInt(document.getElementById('guess-number').value);
-
-        if (guess < 1 || guess > 10 || isNaN(guess)) {
-            showToast('Escolhe um número entre 1 e 10!', true);
-            return;
-        }
-
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        if ((userDoc.data().balance || 0) < 5) {
-            showToast('Precisas de 5 🪙 para jogar!', true);
-            return;
-        }
-
-        const secret = Math.floor(Math.random() * 10) + 1;
-
-        if (guess === secret) {
-            document.getElementById('guess-result').textContent = `🎯 CORRETO! Era ${secret}. Ganhaste 50 🪙!`;
-            await db.collection('users').doc(currentUser.uid).update({
-                balance: firebase.firestore.FieldValue.increment(45)
-            });
-            showToast('Ganhaste 50 🪙! 🎉');
-        } else {
-            document.getElementById('guess-result').textContent = `❌ Errado! Era ${secret}. Perdeste 5 🪙`;
-            await db.collection('users').doc(currentUser.uid).update({
-                balance: firebase.firestore.FieldValue.increment(-5)
-            });
-            showToast('Perdeste 5 🪙');
-        }
-
-        loadEconomyPanel();
-    }
-
-    // ============ PAINEL DE MEMBROS ============
-    async function loadMembersPanel() {
-        if (!currentServer) {
-            document.getElementById('members-list').innerHTML = '<p style="color:var(--text-muted);">Seleciona um servidor primeiro</p>';
-            document.getElementById('invite-code-display').textContent = 'Nenhum';
-            return;
-        }
-
-        const serverDoc = await db.collection('servers').doc(currentServer).get();
-        if (!serverDoc.exists) return;
-
-        const serverData = serverDoc.data();
-        const members = serverData.members || [];
-        const invites = serverData.invites || [];
-
-        document.getElementById('invite-code-display').textContent = invites.length > 0 ? invites[invites.length - 1] : 'Nenhum';
-
-        const membersDiv = document.getElementById('members-list');
-        membersDiv.innerHTML = '';
-
-        if (members.length === 0) {
-            membersDiv.innerHTML = '<p style="color:var(--text-muted);">Nenhum membro</p>';
-            return;
-        }
-
-        for (const uid of members) {
-            const userDoc = await db.collection('users').doc(uid).get();
-            const userData = userDoc.data();
-            const isOwner = uid === serverData.ownerId;
-
-            const memberDiv = document.createElement('div');
-            memberDiv.className = 'member-item';
-            memberDiv.innerHTML = `
-                <span class="online-dot"></span>
-                <span>${escapeHtml(userData?.username || uid)}</span>
-                ${isOwner ? '<span>👑</span>' : ''}
-            `;
-            membersDiv.appendChild(memberDiv);
-        }
-    }
-
-    async function generateInvite() {
-        if (!currentServer) {
-            showToast('Seleciona um servidor primeiro!', true);
-            return;
-        }
-
-        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-
-        try {
-            await db.collection('servers').doc(currentServer).update({
-                invites: firebase.firestore.FieldValue.arrayUnion(code)
-            });
-
-            showToast('Convite gerado: ' + code);
-            loadMembersPanel();
-        } catch (err) {
-            showToast('Erro ao gerar convite', true);
-        }
-    }
-
-    async function joinServerByInvite() {
-        const code = document.getElementById('join-invite-code').value.trim().toUpperCase();
-
-        if (!code || !currentUser) return;
-
-        try {
-            const snapshot = await db.collection('servers').where('invites', 'array-contains', code).get();
-
-            if (snapshot.empty) {
-                showToast('Convite inválido!', true);
-                return;
-            }
-
-            const serverDoc = snapshot.docs[0];
-            const serverData = serverDoc.data();
-
-            if (serverData.members.includes(currentUser.uid)) {
-                showToast('Já estás neste servidor!', true);
-                return;
-            }
-
-            await db.collection('servers').doc(serverDoc.id).update({
-                members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
-            });
-
-            showToast('Entraste no servidor! 🎉');
-            document.getElementById('join-invite-code').value = '';
-            loadServers();
-            loadMembersPanel();
-        } catch (err) {
-            showToast('Erro ao entrar no servidor', true);
-        }
-    }
-
-    // ============ PAINEL DE DEFINIÇÕES ============
-    async function loadSettingsPanel() {
-        if (!currentUser) return;
-
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        const userData = userDoc.data();
-
-        document.getElementById('settings-username').value = userData.username || '';
-        document.getElementById('settings-bio').value = userData.bio || '';
-
-        // Carregar inventário
-        const inventory = userData.inventory || [];
-        const inventoryDiv = document.getElementById('inventory-list');
-
-        if (inventory.length === 0) {
-            inventoryDiv.innerHTML = '<p style="color:var(--text-muted);">Nenhum item no inventário. Visita a loja!</p>';
-        } else {
-            const itemNames = {
-                'color_red': '🔴 Nome Vermelho',
-                'color_blue': '🔵 Nome Azul',
-                'color_green': '🟢 Nome Verde',
-                'badge_vip': '💎 Badge VIP',
-                'badge_og': '👑 Badge OG',
-                'badge_botmaster': '🤖 Badge Bot Master'
-            };
-
-            inventoryDiv.innerHTML = inventory.map(id => `
-                <div style="padding:6px 10px;background:var(--bg-tertiary);border-radius:4px;margin-bottom:4px;">
-                    ${itemNames[id] || id}
+                <p class="error-msg" id="login-error"></p>
+                <button type="submit" class="btn btn-primary btn-block">
+                    Entrar na Conta
+                </button>
+            </form>
+
+            <!-- Formulário de Registo -->
+            <form id="form-register" onsubmit="handleRegister(event)" style="display:none;">
+                <div class="form-group">
+                    <label>Nome de utilizador</label>
+                    <input type="text" id="reg-username" placeholder="Como te chamas?" required minlength="3" autocomplete="username">
                 </div>
-            `).join('');
-        }
-    }
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="reg-email" placeholder="exemplo@email.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
+                </div>
+                <p class="error-msg" id="reg-error"></p>
+                <button type="submit" class="btn btn-primary btn-block">
+                    Criar Conta
+                </button>
+            </form>
 
-    async function saveProfile() {
-        if (!currentUser) return;
+            <div class="divider"><span>ou</span></div>
+            
+            <button class="btn btn-google btn-block" onclick="loginWithGoogle()">
+                <span style="font-size:16px;">G</span> Continuar com Google
+            </button>
+        </div>
+    </div>
 
-        const username = document.getElementById('settings-username').value.trim();
-        const bio = document.getElementById('settings-bio').value.trim();
+    <!-- =============================================
+         APLICAÇÃO PRINCIPAL
+         ============================================= -->
+    <div id="app-container">
+        <!-- Topbar Mobile -->
+        <div class="topbar">
+            <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Menu">
+                ☰
+            </button>
+            <span class="topbar-title" id="topbar-title">Cord</span>
+            <div class="avatar-sm" id="avatar-top">
+                <div class="status-dot"></div>
+            </div>
+        </div>
 
-        if (!username) {
-            showToast('O nome não pode estar vazio!', true);
-            return;
-        }
+        <!-- Overlay da Sidebar (mobile) -->
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-        try {
-            await currentUser.updateProfile({ displayName: username });
-            await db.collection('users').doc(currentUser.uid).update({
-                username: username,
-                bio: bio
-            });
+        <div class="app-layout">
+            <!-- =============================================
+                 SIDEBAR
+                 ============================================= -->
+            <div class="sidebar" id="sidebar">
+                <!-- Cabeçalho da Sidebar -->
+                <div class="sidebar-header">
+                    <span class="brand-name">🐺 Cord</span>
+                    <button class="btn btn-xs btn-primary" onclick="showServerModal()" title="Criar Servidor">
+                        ＋ Novo
+                    </button>
+                </div>
 
-            document.getElementById('username-footer').textContent = username;
-            document.getElementById('topbar-title').textContent = username;
+                <!-- Navegação Principal -->
+                <div class="nav-grid">
+                    <button class="nav-btn active" onclick="switchView('chat')" data-view="chat">
+                        💬 Chat
+                    </button>
+                    <button class="nav-btn" onclick="switchView('friends')" data-view="friends">
+                        👥 Amigos
+                    </button>
+                    <button class="nav-btn" onclick="switchView('dashboard')" data-view="dashboard">
+                        🤖 Bots
+                    </button>
+                    <button class="nav-btn" onclick="switchView('nitro')" data-view="nitro">
+                        ⭐ Nitro
+                    </button>
+                    <button class="nav-btn" onclick="switchView('members')" data-view="members">
+                        👤 Membros
+                    </button>
+                    <button class="nav-btn" onclick="switchView('settings')" data-view="settings">
+                        ⚙️ Defs
+                    </button>
+                </div>
 
-            showToast('Perfil atualizado! 💾');
-        } catch (err) {
-            showToast('Erro ao guardar perfil', true);
-        }
-    }
+                <!-- Lista de Servidores -->
+                <div class="server-list-section">
+                    <div class="section-label">
+                        SERVIDORES
+                    </div>
+                    <div id="server-list">
+                        <p style="color:var(--text-muted);font-size:11px;padding:8px;text-align:center;">
+                            Cria o teu primeiro servidor!
+                        </p>
+                    </div>
+                </div>
 
-    function changeTheme(theme) {
-        const themes = {
-            dark: {
-                '--bg-primary': '#36393f',
-                '--bg-secondary': '#2f3136',
-                '--bg-tertiary': '#40444b',
-                '--text-normal': '#dcddde',
-                '--text-muted': '#b9bbbe',
-                '--input-bg': '#202225'
-            },
-            light: {
-                '--bg-primary': '#ffffff',
-                '--bg-secondary': '#f2f3f5',
-                '--bg-tertiary': '#e3e5e8',
-                '--text-normal': '#2e3338',
-                '--text-muted': '#747f8d',
-                '--input-bg': '#e3e5e8'
-            },
-            midnight: {
-                '--bg-primary': '#0a0a1a',
-                '--bg-secondary': '#0d0d24',
-                '--bg-tertiary': '#1a1a3e',
-                '--text-normal': '#c8c8ff',
-                '--text-muted': '#6a6a9f',
-                '--input-bg': '#12122a'
-            }
-        };
+                <!-- Lista de Canais -->
+                <div class="channel-list-section">
+                    <div class="section-label">
+                        CANAIS
+                        <button class="btn btn-xs btn-primary" onclick="showChannelModal()" title="Criar Canal">+</button>
+                    </div>
+                    <div id="channel-list"></div>
+                </div>
 
-        const themeColors = themes[theme];
-        for (const [property, value] of Object.entries(themeColors)) {
-            document.documentElement.style.setProperty(property, value);
-        }
+                <!-- Rodapé da Sidebar -->
+                <div class="sidebar-footer">
+                    <div class="avatar-sm" id="avatar-footer">
+                        <div class="status-dot"></div>
+                    </div>
+                    <span class="user-name" id="username-footer">Utilizador</span>
+                    <button class="btn-icon" onclick="logout()" title="Terminar Sessão">
+                        🚪
+                    </button>
+                </div>
+            </div>
 
-        showToast('Tema alterado para: ' + (theme === 'dark' ? 'Escuro' : theme === 'light' ? 'Claro' : 'Meia-Noite'));
-    }
+            <!-- =============================================
+                 ÁREA PRINCIPAL
+                 ============================================= -->
+            <div class="main-area">
+                
+                <!-- ===== CHAT VIEW ===== -->
+                <div id="chat-view">
+                    <div class="chat-header">
+                        <span class="hash-icon">#</span>
+                        <span id="current-channel-name">Seleciona um canal</span>
+                    </div>
+                    <div class="chat-messages" id="chat-box">
+                        <div class="empty-state">
+                            <span class="icon">💬</span>
+                            <span class="empty-title">Bem-vindo ao Cord!</span>
+                            <span class="empty-desc">Seleciona um servidor e um canal para começar a conversar.</span>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <textarea 
+                            class="chat-input" 
+                            id="msg-input" 
+                            placeholder="Escreve uma mensagem... (Usa !help para comandos)" 
+                            rows="1"
+                            onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"
+                        ></textarea>
+                        <button class="send-btn" onclick="sendMsg()" title="Enviar Mensagem">
+                            ➤
+                        </button>
+                    </div>
+                </div>
 
-    // ============ PAINEL DE BOTS ============
-    function loadMyBots() {
-        if (!currentUser) return;
+                <!-- ===== PAINEL DE AMIGOS ===== -->
+                <div class="panel" id="friends-view" style="display:none;">
+                    <h2>👥 Amigos &amp; Mensagens</h2>
+                    
+                    <!-- Adicionar Amigo -->
+                    <div class="card">
+                        <h3>➕ Adicionar Amigo</h3>
+                        <p style="margin-bottom:10px;">
+                            O teu código de amigo: 
+                            <b id="my-friend-code" style="color:var(--blurple);font-size:16px;">#----</b>
+                        </p>
+                        <div class="form-group">
+                            <label>Código do amigo</label>
+                            <input type="text" id="friend-code-input" placeholder="#0000">
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="addFriend()">
+                            ➕ Adicionar Amigo
+                        </button>
+                        <p id="add-friend-result" style="margin-top:8px;font-size:12px;"></p>
+                    </div>
 
-        db.collection('bots')
-            .where('ownerId', '==', currentUser.uid)
-            .onSnapshot(snapshot => {
-                const list = document.getElementById('my-bots-list');
-                list.innerHTML = '';
+                    <!-- Lista de Amigos -->
+                    <div class="card">
+                        <h3>📋 Os Teus Amigos</h3>
+                        <div id="friends-list">
+                            <p style="color:var(--text-muted);text-align:center;padding:15px;">
+                                Ainda não tens amigos. Adiciona alguém pelo código!
+                            </p>
+                        </div>
+                    </div>
 
-                if (snapshot.empty) {
-                    list.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:15px;">Nenhum bot criado. Cria um acima! 👆</p>';
-                    return;
-                }
+                    <!-- Mensagens Privadas -->
+                    <div class="card">
+                        <h3>💬 Mensagens Privadas</h3>
+                        <div id="dm-list">
+                            <p style="color:var(--text-muted);text-align:center;padding:15px;">
+                                Adiciona amigos para conversar em privado.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-                snapshot.forEach(doc => {
-                    const bot = doc.data();
-                    const card = document.createElement('div');
-                    card.className = 'bot-card';
-                    card.innerHTML = `
-                        <div class="bot-info">
-                            <div class="bot-name">🤖 ${escapeHtml(bot.name)}</div>
-                            <div class="bot-status ${bot.active ? 'online' : 'offline'}">
-                                ${bot.active ? '🟢 Ativo' : '⚫ Inativo'}
+                <!-- ===== PAINEL DE BOTS ===== -->
+                <div class="panel" id="dashboard-view" style="display:none;">
+                    <h2>🤖 Dashboard de Bots</h2>
+                    
+                    <!-- Criar Bot -->
+                    <div class="card">
+                        <h3>➕ Criar Novo Bot</h3>
+                        <div class="form-group">
+                            <label>Nome do Bot</label>
+                            <input type="text" id="new-bot-name" placeholder="Ex: SuperBot" maxlength="30">
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição</label>
+                            <input type="text" id="new-bot-desc" placeholder="O que este bot faz?">
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="createBot()">
+                            🤖 Criar Bot
+                        </button>
+                    </div>
+
+                    <!-- Meus Bots -->
+                    <div class="card">
+                        <h3>📋 Meus Bots</h3>
+                        <div id="my-bots-list">
+                            <p style="color:var(--text-muted);text-align:center;padding:15px;">
+                                Nenhum bot criado ainda.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Adicionar Bot ao Servidor -->
+                    <div class="card">
+                        <h3>🔌 Adicionar Bot ao Servidor</h3>
+                        <div class="form-group">
+                            <label>Bot</label>
+                            <select id="select-bot-to-add">
+                                <option value="">Seleciona um bot...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Servidor</label>
+                            <select id="select-server-to-add">
+                                <option value="">Seleciona um servidor...</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="addBotToServer()">
+                            ➕ Adicionar ao Servidor
+                        </button>
+                    </div>
+
+                    <!-- Info Termux -->
+                    <div class="card" style="background:#1a1a2f;border:1px solid #2a2a5c;">
+                        <h3>📖 Como usar o bot no Termux</h3>
+                        <p style="font-size:12px;line-height:1.8;">
+                            1️⃣ Cria um bot acima e <b>copia o Token</b><br>
+                            2️⃣ Adiciona o bot a um servidor<br>
+                            3️⃣ No Termux: <code class="code-inline">pkg install nodejs -y</code><br>
+                            4️⃣ Usa o script do bot fornecido<br>
+                            5️⃣ Executa e vê a magia! ✨
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ===== PAINEL NITRO ===== -->
+                <div class="panel" id="nitro-view" style="display:none;">
+                    <h2>⭐ Cord Nitro</h2>
+                    
+                    <!-- Card Nitro -->
+                    <div class="nitro-card">
+                        <span class="nitro-icon">✦</span>
+                        <h3>Cord Nitro</h3>
+                        <div class="nitro-price">500 🪙/mês</div>
+                        <div class="nitro-features">
+                            ✅ Efeitos de perfil exclusivos<br>
+                            ✅ Badge Nitro no perfil<br>
+                            ✅ Nome com gradiente no chat<br>
+                            ✅ Moldura animada no avatar<br>
+                            ✅ Acesso a emojis exclusivos<br>
+                            ✅ Suporte prioritário
+                        </div>
+                        <button class="btn btn-sm" style="background:white;color:#6366f1;margin-top:12px;font-weight:700;" onclick="buyNitro()">
+                            ⭐ Assinar Nitro
+                        </button>
+                    </div>
+
+                    <!-- Efeitos de Perfil -->
+                    <div class="card">
+                        <h3>🎨 Efeitos de Perfil</h3>
+                        <div class="shop-grid" id="profile-effects">
+                            <div class="shop-item">
+                                <div class="shop-item-info">
+                                    <div class="shop-item-name">✨ Efeito Glow</div>
+                                    <div class="shop-item-desc">Brilho roxo à volta do avatar</div>
+                                </div>
+                                <span class="shop-item-price">300 🪙</span>
+                                <button class="btn btn-xs btn-primary" onclick="buyEffect('glow', 300)">Comprar</button>
                             </div>
-                            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">
-                                ${escapeHtml(bot.desc || 'Sem descrição')}
+                            <div class="shop-item">
+                                <div class="shop-item-info">
+                                    <div class="shop-item-name">🌈 Moldura Arco-Íris</div>
+                                    <div class="shop-item-desc">Moldura colorida animada</div>
+                                </div>
+                                <span class="shop-item-price">400 🪙</span>
+                                <button class="btn btn-xs btn-primary" onclick="buyEffect('rainbow', 400)">Comprar</button>
                             </div>
-                            <div style="font-size:10px;color:${bot.serverId ? 'var(--green)' : 'var(--yellow)'};margin-top:2px;">
-                                ${bot.serverId ? '🔗 Ligado a servidor' : '⚠️ Não está em servidor'}
+                            <div class="shop-item">
+                                <div class="shop-item-info">
+                                    <div class="shop-item-name">💎 Moldura de Cristal</div>
+                                    <div class="shop-item-desc">Efeito cristalino elegante</div>
+                                </div>
+                                <span class="shop-item-price">600 🪙</span>
+                                <button class="btn btn-xs btn-primary" onclick="buyEffect('crystal', 600)">Comprar</button>
                             </div>
                         </div>
-                        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
-                            <div class="token-display" onclick="copyBotToken('${doc.id}', this)" title="Clique para copiar o token">
-                                ${(bot.token || '').substring(0, 16)}...
-                                <span class="copied-tooltip">Copiado!</span>
+                    </div>
+
+                    <!-- Badges -->
+                    <div class="card">
+                        <h3>🏅 Badges Exclusivos</h3>
+                        <div class="shop-grid" id="badges-shop">
+                            <div class="shop-item">
+                                <div class="shop-item-info">
+                                    <div class="shop-item-name">💎 Badge VIP</div>
+                                    <div class="shop-item-desc">Exclusivo para membros VIP</div>
+                                </div>
+                                <span class="shop-item-price">800 🪙</span>
+                                <button class="btn btn-xs btn-primary" onclick="buyBadge('vip', 800)">Comprar</button>
                             </div>
-                            <div style="display:flex;gap:4px;">
-                                <button class="btn btn-xs btn-primary" onclick="editBot('${doc.id}')">✏️ Editar</button>
-                                <button class="btn btn-xs btn-danger" onclick="deleteBot('${doc.id}')">🗑️</button>
+                            <div class="shop-item">
+                                <div class="shop-item-info">
+                                    <div class="shop-item-name">👑 Badge OG</div>
+                                    <div class="shop-item-desc">Para os utilizadores originais</div>
+                                </div>
+                                <span class="shop-item-price">1500 🪙</span>
+                                <button class="btn btn-xs btn-primary" onclick="buyBadge('og', 1500)">Comprar</button>
+                            </div>
+                            <div class="shop-item">
+                                <div class="shop-item-info">
+                                    <div class="shop-item-name">🤖 Badge Bot Master</div>
+                                    <div class="shop-item-desc">Mestre dos bots</div>
+                                </div>
+                                <span class="shop-item-price">1000 🪙</span>
+                                <button class="btn btn-xs btn-primary" onclick="buyBadge('botmaster', 1000)">Comprar</button>
                             </div>
                         </div>
-                    `;
-                    list.appendChild(card);
-                });
-            });
-    }
+                    </div>
 
-    async function loadBotServerSelects() {
-        if (!currentUser) return;
+                    <!-- Carteira -->
+                    <div class="card">
+                        <h3>💳 Carteira</h3>
+                        <p>Saldo atual: <b style="color:var(--yellow);font-size:20px;" id="nitro-balance">0</b> 🪙 CordCoins</p>
+                        <p style="font-size:11px;margin-top:4px;">Ganha moedas participando no servidor e com recompensas diárias!</p>
+                        <button class="btn btn-sm btn-primary" onclick="dailyReward()" style="margin-top:10px;">
+                            🎁 Recompensa Diária (50-100 🪙)
+                        </button>
+                    </div>
+                </div>
 
-        const botSelect = document.getElementById('select-bot-to-add');
-        const serverSelect = document.getElementById('select-server-to-add');
+                <!-- ===== PAINEL DE MEMBROS ===== -->
+                <div class="panel" id="members-view" style="display:none;">
+                    <h2>👤 Gestão de Membros</h2>
+                    
+                    <!-- Convites -->
+                    <div class="card">
+                        <h3>🔗 Sistema de Convites</h3>
+                        <p style="font-size:12px;margin-bottom:6px;">Código de convite atual:</p>
+                        <div class="invite-code-display" id="invite-code-display" onclick="copyInviteCode()" title="Clique para copiar">
+                            Nenhum
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="generateInvite()">
+                            🔗 Gerar Novo Convite
+                        </button>
+                        
+                        <div style="margin-top:14px;">
+                            <p style="font-size:12px;margin-bottom:4px;">Entrar com código de convite:</p>
+                            <div class="form-group">
+                                <input type="text" id="join-invite-code" placeholder="Código de convite (ex: ABC123)">
+                            </div>
+                            <button class="btn btn-sm btn-primary" onclick="joinServerByInvite()">
+                                ➡️ Entrar no Servidor
+                            </button>
+                        </div>
+                    </div>
 
-        botSelect.innerHTML = '<option value="">Seleciona um bot...</option>';
-        serverSelect.innerHTML = '<option value="">Seleciona um servidor...</option>';
+                    <!-- Lista de Membros -->
+                    <div class="card">
+                        <h3>👥 Membros do Servidor</h3>
+                        <div id="members-list">
+                            <p style="color:var(--text-muted);text-align:center;padding:15px;">
+                                Seleciona um servidor para ver os membros.
+                            </p>
+                        </div>
+                    </div>
 
-        const botsSnapshot = await db.collection('bots')
-            .where('ownerId', '==', currentUser.uid)
-            .get();
+                    <!-- Cargos -->
+                    <div class="card">
+                        <h3>🎖️ Cargos do Servidor</h3>
+                        <div id="roles-list">
+                            <p style="color:var(--text-muted);text-align:center;padding:15px;">
+                                Seleciona um servidor para gerir cargos.
+                            </p>
+                        </div>
+                        <button class="btn btn-xs btn-primary" onclick="addRole()" style="margin-top:8px;">
+                            ➕ Adicionar Cargo
+                        </button>
+                    </div>
+                </div>
 
-        botsSnapshot.forEach(doc => {
-            const bot = doc.data();
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.textContent = bot.name + (bot.serverId ? ' (já em servidor)' : '');
-            if (bot.serverId) option.disabled = true;
-            botSelect.appendChild(option);
-        });
+                <!-- ===== PAINEL DE DEFINIÇÕES ===== -->
+                <div class="panel" id="settings-view" style="display:none;">
+                    <h2>⚙️ Definições da Conta</h2>
+                    
+                    <!-- Perfil -->
+                    <div class="card">
+                        <h3>👤 Editar Perfil</h3>
+                        <div class="form-group">
+                            <label>Nome de utilizador</label>
+                            <input type="text" id="settings-username" placeholder="O teu nome">
+                        </div>
+                        <div class="form-group">
+                            <label>Bio</label>
+                            <textarea id="settings-bio" placeholder="Escreve algo sobre ti..." rows="3"></textarea>
+                        </div>
+                        <button class="btn btn-sm btn-primary" onclick="saveProfile()">
+                            💾 Guardar Alterações
+                        </button>
+                    </div>
 
-        const serversSnapshot = await db.collection('servers')
-            .where('members', 'array-contains', currentUser.uid)
-            .get();
+                    <!-- Tema -->
+                    <div class="card">
+                        <h3>🎨 Personalização</h3>
+                        <div class="form-group">
+                            <label>Tema</label>
+                            <select id="theme-select" onchange="changeTheme(this.value)">
+                                <option value="dark">🌙 Escuro (Padrão)</option>
+                                <option value="light">☀️ Claro</option>
+                                <option value="midnight">🌑 Meia-Noite</option>
+                            </select>
+                        </div>
+                    </div>
 
-        serversSnapshot.forEach(doc => {
-            const server = doc.data();
-            const option = document.createElement('option');
-            option.value = doc.id;
-            option.textContent = server.name;
-            serverSelect.appendChild(option);
-        });
-    }
+                    <!-- Inventário -->
+                    <div class="card">
+                        <h3>📦 O Teu Inventário</h3>
+                        <div id="inventory-list">
+                            <p style="color:var(--text-muted);text-align:center;padding:15px;">
+                                Os itens que comprares aparecerão aqui.
+                            </p>
+                        </div>
+                    </div>
+                </div>
 
-    async function createBot() {
-        const name = document.getElementById('new-bot-name').value.trim();
-        const desc = document.getElementById('new-bot-desc').value.trim();
+            </div><!-- Fim .main-area -->
+        </div><!-- Fim .app-layout -->
+    </div><!-- Fim #app-container -->
 
-        if (!name) {
-            showToast('Dá um nome ao bot!', true);
-            return;
-        }
+    <!-- =============================================
+         MODAIS
+         ============================================= -->
+    <!-- Modal Criar Servidor -->
+    <div class="modal-overlay" id="server-modal">
+        <div class="modal">
+            <h3>🆕 Criar Servidor</h3>
+            <div class="form-group">
+                <label>Nome do Servidor</label>
+                <input type="text" id="server-name" placeholder="Ex: O Meu Servidor" maxlength="50">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal('server-modal')">Cancelar</button>
+                <button class="btn-confirm" onclick="createServer()">Criar Servidor</button>
+            </div>
+        </div>
+    </div>
 
-        const token = 'bot_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    <!-- Modal Criar Canal -->
+    <div class="modal-overlay" id="channel-modal">
+        <div class="modal">
+            <h3>🆕 Criar Canal</h3>
+            <div class="form-group">
+                <label>Nome do Canal</label>
+                <input type="text" id="channel-name" placeholder="Ex: geral" maxlength="30">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeModal('channel-modal')">Cancelar</button>
+                <button class="btn-confirm" onclick="createChannel()">Criar Canal</button>
+            </div>
+        </div>
+    </div>
 
-        try {
-            await db.collection('bots').add({
-                name: name,
-                desc: desc,
-                token: token,
-                ownerId: currentUser.uid,
-                active: true,
-                serverId: null,
-                channelId: null,
-                commands: {},
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+    <!-- Toast para notificações -->
+    <div class="toast" id="toast"></div>
 
-            document.getElementById('new-bot-name').value = '';
-            document.getElementById('new-bot-desc').value = '';
-            showToast('Bot criado! 🤖 Copia o token!');
-            loadBotServerSelects();
-            switchView('dashboard');
-        } catch (err) {
-            showToast('Erro ao criar bot', true);
-        }
-    }
-
-    async function addBotToServer() {
-        const botId = document.getElementById('select-bot-to-add').value;
-        const serverId = document.getElementById('select-server-to-add').value;
-
-        if (!botId || !serverId) {
-            showToast('Seleciona um bot e um servidor!', true);
-            return;
-        }
-
-        try {
-            await db.collection('bots').doc(botId).update({
-                serverId: serverId,
-                channelId: null
-            });
-
-            // Enviar mensagem de sistema no primeiro canal
-            const channelsSnapshot = await db.collection('servers')
-                .doc(serverId)
-                .collection('channels')
-                .limit(1)
-                .get();
-
-            if (!channelsSnapshot.empty) {
-                const botDoc = await db.collection('bots').doc(botId).get();
-                const botName = botDoc.data().name;
-
-                await db.collection('servers')
-                    .doc(serverId)
-                    .collection('channels')
-                    .doc(channelsSnapshot.docs[0].id)
-                    .collection('messages')
-                    .add({
-                        autor: 'Sistema',
-                        texto: `🤖 O bot **${botName}** entrou no servidor! Usa \`!help\` para ver comandos.`,
-                        userId: 'system',
-                        isBot: false,
-                        isSystem: true,
-                        reactions: {},
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-            }
-
-            showToast('Bot adicionado ao servidor! 🎉');
-            loadBotServerSelects();
-            loadMyBots();
-        } catch (err) {
-            showToast('Erro ao adicionar bot', true);
-        }
-    }
-
-    async function editBot(botId) {
-        const newName = prompt('Novo nome do bot:');
-        if (!newName) return;
-
-        const newDesc = prompt('Nova descrição:') || '';
-        const commandsStr = prompt(
-            'Comandos personalizados (formato: !comando=resposta, separados por vírgula):\n' +
-            'Exemplo: !ola=Olá mundo!, !adeus=Até logo!'
-        );
-
-        const commands = {};
-        if (commandsStr) {
-            commandsStr.split(',').forEach(pair => {
-                const [cmd, resp] = pair.split('=');
-                if (cmd && resp) {
-                    commands[cmd.trim().toLowerCase()] = resp.trim();
-                }
-            });
-        }
-
-        try {
-            await db.collection('bots').doc(botId).update({
-                name: newName,
-                desc: newDesc,
-                commands: commands
-            });
-            showToast('Bot atualizado! ✏️');
-        } catch (err) {
-            showToast('Erro ao editar bot', true);
-        }
-    }
-
-    async function deleteBot(botId) {
-        if (!confirm('Tens a certeza que queres apagar este bot? Esta ação é irreversível.')) return;
-
-        try {
-            await db.collection('bots').doc(botId).delete();
-            showToast('Bot apagado 🗑️');
-            loadBotServerSelects();
-        } catch (err) {
-            showToast('Erro ao apagar bot', true);
-        }
-    }
-
-    async function copyBotToken(botId, element) {
-        try {
-            const botDoc = await db.collection('bots').doc(botId).get();
-            const token = botDoc.data().token;
-
-            await navigator.clipboard.writeText(token);
-
-            const tooltip = element.querySelector('.copied-tooltip');
-            tooltip.classList.add('show');
-            setTimeout(() => tooltip.classList.remove('show'), 1500);
-
-            showToast('Token copiado! 📋');
-        } catch (err) {
-            showToast('Erro ao copiar token', true);
-        }
-    }
-
-    // ============ MODAIS ============
-    function showServerModal() {
-        document.getElementById('server-modal').style.display = 'flex';
-        document.getElementById('server-name').focus();
-    }
-
-    function showChannelModal() {
-        if (!currentServer) {
-            showToast('Seleciona um servidor primeiro!', true);
-            return;
-        }
-        document.getElementById('channel-modal').style.display = 'flex';
-        document.getElementById('channel-name').focus();
-    }
-
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-
-    async function createServer() {
-        const name = document.getElementById('server-name').value.trim();
-
-        if (!name || !currentUser) return;
-
-        try {
-            const docRef = await db.collection('servers').add({
-                name: name,
-                ownerId: currentUser.uid,
-                members: [currentUser.uid],
-                invites: [],
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-
-            // Criar canal padrão "geral"
-            await db.collection('servers')
-                .doc(docRef.id)
-                .collection('channels')
-                .add({
-                    name: 'geral',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-            closeModal('server-modal');
-            document.getElementById('server-name').value = '';
-            showToast('Servidor criado com sucesso! 🎉');
-        } catch (err) {
-            showToast('Erro ao criar servidor', true);
-        }
-    }
-
-    async function createChannel() {
-        const name = document.getElementById('channel-name').value.trim();
-
-        if (!name || !currentServer) return;
-
-        try {
-            await db.collection('servers')
-                .doc(currentServer)
-                .collection('channels')
-                .add({
-                    name: name,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-            closeModal('channel-modal');
-            document.getElementById('channel-name').value = '';
-            showToast('Canal #' + name + ' criado!');
-        } catch (err) {
-            showToast('Erro ao criar canal', true);
-        }
-    }
-
-    // ============ UI HELPERS ============
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-
-        sidebar.classList.toggle('open');
-        overlay.classList.toggle('show');
-    }
-
-    function showToast(message, isError = false) {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = 'toast' + (isError ? ' error' : '');
-        toast.classList.add('show');
-
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 2500);
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text || '';
-        return div.innerHTML;
-    }
-
-    function stringToColor(str) {
-        let hash = 0;
-        for (let i = 0; i < (str || '?').length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const h = Math.abs(hash) % 360;
-        return `hsl(${h}, 60%, 55%)`;
-    }
-
-    function formatText(text) {
-        // Menções @usuario
-        text = text.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
-        // Código inline `code`
-        text = text.replace(/`([^`]+)`/g, '<span class="code">$1</span>');
-        // Negrito **texto**
-        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        return text;
-    }
-
-    // ============ EVENT LISTENERS ============
-    // Fechar modais ao clicar fora
-    document.getElementById('server-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal('server-modal');
-    });
-
-    document.getElementById('channel-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal('channel-modal');
-    });
-
-    // Auto-resize do input de chat
-    document.getElementById('msg-input').addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
-    });
-</script>
+    <!-- =============================================
+         JAVASCRIPT
+         ============================================= -->
+    <script src="script.js"></script>
 </body>
 </html>
