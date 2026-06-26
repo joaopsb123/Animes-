@@ -3,613 +3,337 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
-    <!-- SEO -->
-    <title>Cord - A Rede Social Definitiva</title>
-    <meta name="description" content="Cord - Chat, amigos, bots, Nitro, cargos, convites e muito mais! A rede social completa.">
-    <meta name="theme-color" content="#6366f1">
+    <title>Cord - Inspirado no Discord</title>
+    <meta name="theme-color" content="#5865F2">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <!-- Firebase SDKs -->
+    <!-- CloudBinary SDK -->
+    <script src="https://cdn.cloudbinary.io/sdk.min.js"></script>
+    
+    <!-- Firebase (mantido para auth) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     
-    <!-- Folha de Estilos -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- =============================================
-         TELA DE AUTENTICAÇÃO
-         ============================================= -->
+
+    <!-- ============ AUTENTICAÇÃO ============ -->
     <div id="auth-container">
         <div class="auth-wrapper">
             <div class="auth-card">
                 <div class="auth-logo">🐺</div>
-                <h1 class="auth-title">Cord</h1>
-                <p class="auth-subtitle">A rede social definitiva</p>
+                <h1>Cord</h1>
+                <p>Chat, amigos, bots e muito mais</p>
                 
                 <div class="auth-tabs">
-                    <button class="auth-tab active" onclick="switchAuthTab('login')" id="tab-login">
-                        <span>🔑</span> Entrar
-                    </button>
-                    <button class="auth-tab" onclick="switchAuthTab('register')" id="tab-register">
-                        <span>✨</span> Registar
-                    </button>
+                    <button class="auth-tab active" onclick="switchAuthTab('login')">Entrar</button>
+                    <button class="auth-tab" onclick="switchAuthTab('register')">Registar</button>
                 </div>
 
                 <form id="form-login" onsubmit="handleLogin(event)">
                     <div class="input-group">
                         <label>Email</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">📧</span>
-                            <input type="email" id="login-email" placeholder="exemplo@email.com" required autocomplete="email">
-                        </div>
+                        <input type="email" id="login-email" placeholder="exemplo@email.com" required>
                     </div>
                     <div class="input-group">
                         <label>Senha</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
-                        </div>
+                        <input type="password" id="login-password" placeholder="••••••••" required>
                     </div>
                     <p class="error-msg" id="login-error"></p>
-                    <button type="submit" class="btn btn-primary btn-block btn-lg">
-                        Entrar na Conta
-                    </button>
+                    <button type="submit" class="btn btn-primary btn-block">Entrar</button>
                 </form>
 
                 <form id="form-register" onsubmit="handleRegister(event)" style="display:none;">
                     <div class="input-group">
-                        <label>Nome de utilizador</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">👤</span>
-                            <input type="text" id="reg-username" placeholder="Como te chamas?" required minlength="3" autocomplete="username">
-                        </div>
+                        <label>Nome</label>
+                        <input type="text" id="reg-username" placeholder="Como te chamas?" required>
                     </div>
                     <div class="input-group">
                         <label>Email</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">📧</span>
-                            <input type="email" id="reg-email" placeholder="exemplo@email.com" required autocomplete="email">
-                        </div>
+                        <input type="email" id="reg-email" placeholder="exemplo@email.com" required>
                     </div>
                     <div class="input-group">
                         <label>Senha</label>
-                        <div class="input-wrapper">
-                            <span class="input-icon">🔒</span>
-                            <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required minlength="6" autocomplete="new-password">
-                        </div>
+                        <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required>
                     </div>
                     <p class="error-msg" id="reg-error"></p>
-                    <button type="submit" class="btn btn-primary btn-block btn-lg">
-                        Criar Conta
-                    </button>
+                    <button type="submit" class="btn btn-primary btn-block">Criar Conta</button>
                 </form>
 
-                <div class="auth-divider"><span>ou continua com</span></div>
-                
-                <button class="btn btn-google btn-block" onclick="loginWithGoogle()">
-                    <span class="google-icon">G</span> Google
-                </button>
+                <div class="divider"><span>ou</span></div>
+                <button class="btn btn-google btn-block" onclick="loginWithGoogle()">Google</button>
             </div>
         </div>
     </div>
 
-    <!-- =============================================
-         APLICAÇÃO PRINCIPAL
-         ============================================= -->
+    <!-- ============ APLICAÇÃO ============ -->
     <div id="app-container">
-        <!-- Barra Superior Mobile -->
-        <header class="topbar">
-            <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Abrir menu">
-                <span></span><span></span><span></span>
-            </button>
-            <span class="topbar-server-name" id="topbar-title">Cord</span>
-            <div class="topbar-actions">
-                <button class="icon-btn" onclick="switchView('friends')" title="Amigos">👥</button>
-                <div class="avatar-xs" id="avatar-top"><div class="status-dot"></div></div>
-            </div>
-        </header>
+        <!-- Topbar Mobile -->
+        <div class="topbar">
+            <button class="hamburger" onclick="toggleSidebar()">☰</button>
+            <span id="topbar-title">Cord</span>
+            <div class="avatar-sm" id="avatar-top"></div>
+        </div>
 
-        <!-- Overlay Sidebar Mobile -->
-        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <div class="overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <div class="app-layout">
-            <!-- ===== SIDEBAR DE SERVIDORES ===== -->
-            <nav class="server-sidebar" id="server-sidebar">
-                <div class="server-sidebar-header">
-                    <button class="brand-btn" onclick="switchView('chat')" title="Início">
+            <!-- Barra de Servidores -->
+            <nav class="guilds-bar" id="guilds-bar">
+                <div class="guilds-list" id="guilds-list">
+                    <div class="guild-item home-guild active" onclick="goHome()" title="Início">
                         🐺
-                    </button>
+                    </div>
+                    <div class="guild-separator"></div>
                 </div>
-                <div class="server-list-scroll" id="server-icons-list">
-                    <!-- Servidores aparecem aqui dinamicamente -->
-                </div>
-                <div class="server-sidebar-footer">
-                    <button class="brand-btn add-server-btn" onclick="showServerModal()" title="Criar Servidor">
-                        ＋
-                    </button>
-                    <button class="brand-btn discover-btn" onclick="showDiscoverModal()" title="Descobrir Servidores">
-                        🔍
-                    </button>
+                <div class="guilds-footer">
+                    <div class="guild-item add-guild" onclick="showServerModal()" title="Criar Servidor">+</div>
+                    <div class="guild-item discover-guild" onclick="showDiscoverModal()" title="Descobrir">🔍</div>
                 </div>
             </nav>
 
-            <!-- ===== SIDEBAR DE CANAIS ===== -->
-            <aside class="channel-sidebar" id="channel-sidebar">
-                <div class="channel-sidebar-header" id="channel-sidebar-header">
-                    <span class="server-name-display" id="sidebar-server-name">🐺 Cord</span>
-                    <button class="icon-btn-sm" onclick="showServerSettings()" title="Configurações">⚙️</button>
-                </div>
-                
-                <!-- Navegação Rápida -->
-                <div class="quick-nav">
-                    <div class="quick-nav-item active" onclick="switchView('chat')" data-nav="chat">
-                        <span>💬</span> Chat
-                    </div>
-                    <div class="quick-nav-item" onclick="switchView('friends')" data-nav="friends">
-                        <span>👥</span> Amigos
-                    </div>
-                    <div class="quick-nav-item" onclick="switchView('nitro')" data-nav="nitro">
-                        <span>⭐</span> Nitro
-                    </div>
-                    <div class="quick-nav-item" onclick="switchView('dashboard')" data-nav="dashboard">
-                        <span>🤖</span> Bots
-                    </div>
+            <!-- Sidebar de Canais -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <span id="sidebar-server-name">🐺 Cord</span>
+                    <button onclick="showServerSettings()" title="Configurações">⚙️</button>
                 </div>
 
-                <!-- Lista de Canais -->
-                <div class="channels-container">
-                    <div class="channels-category">
-                        <div class="category-header">
-                            <span class="category-arrow">▼</span>
-                            <span class="category-name">CANAIS DE TEXTO</span>
-                            <button class="category-add-btn" onclick="showChannelModal()" title="Criar Canal">＋</button>
-                        </div>
-                        <div class="channels-list" id="channel-list">
-                            <p class="placeholder-text">Seleciona um servidor</p>
-                        </div>
-                    </div>
-                    
-                    <div class="channels-category">
-                        <div class="category-header">
-                            <span class="category-arrow">▼</span>
-                            <span class="category-name">MENSAGENS PRIVADAS</span>
-                        </div>
-                        <div class="channels-list" id="dm-channels-list">
-                            <p class="placeholder-text">Adiciona amigos para DMs</p>
-                        </div>
-                    </div>
+                <div class="sidebar-nav">
+                    <div class="nav-item active" onclick="switchView('chat')">💬 Chat</div>
+                    <div class="nav-item" onclick="switchView('friends')">👥 Amigos</div>
+                    <div class="nav-item" onclick="switchView('nitro')">⭐ Nitro</div>
+                    <div class="nav-item" onclick="switchView('bots')">🤖 Bots</div>
+                    <div class="nav-item" onclick="switchView('economy')">💰 Economia</div>
+                    <div class="nav-item" onclick="switchView('music')">🎵 Música</div>
+                    <div class="nav-item" onclick="switchView('calls')">📞 Chamadas</div>
                 </div>
 
-                <!-- Perfil do Utilizador -->
-                <div class="user-panel">
-                    <div class="user-panel-avatar" id="avatar-footer">
-                        <div class="status-dot"></div>
+                <div class="channels-section">
+                    <div class="channels-header">
+                        <span>📁 CANAIS</span>
+                        <button onclick="showChannelModal()">+</button>
                     </div>
-                    <div class="user-panel-info">
-                        <span class="user-panel-name" id="username-footer">Utilizador</span>
-                        <span class="user-panel-status">Online</span>
+                    <div class="channels-list" id="channel-list"></div>
+                </div>
+
+                <div class="sidebar-user">
+                    <div class="avatar-sm" id="avatar-footer"></div>
+                    <div class="user-info">
+                        <span id="username-footer">Utilizador</span>
+                        <span class="user-status">🟢 Online</span>
                     </div>
-                    <div class="user-panel-actions">
-                        <button class="icon-btn-sm" onclick="switchView('settings')" title="Definições">⚙️</button>
-                        <button class="icon-btn-sm" onclick="logout()" title="Sair">🚪</button>
-                    </div>
+                    <button onclick="switchView('settings')">⚙️</button>
+                    <button onclick="logout()">🚪</button>
                 </div>
             </aside>
 
-            <!-- ===== ÁREA PRINCIPAL ===== -->
+            <!-- Conteúdo Principal -->
             <main class="main-content">
-                
-                <!-- ===== VISÃO DO CHAT ===== -->
-                <div id="chat-view" class="view-container">
-                    <div class="chat-header-bar">
-                        <div class="chat-header-left">
-                            <span class="channel-hash">#</span>
-                            <span class="channel-title" id="current-channel-name">Seleciona um canal</span>
-                        </div>
-                        <div class="chat-header-right">
-                            <button class="icon-btn-sm" onclick="showMembersPanel()" title="Membros">👥</button>
-                            <button class="icon-btn-sm" onclick="showServerSettings()" title="Configurações">⚙️</button>
-                            <div class="search-box">
-                                <input type="text" id="search-messages" placeholder="Pesquisar mensagens..." onkeyup="searchMessages()">
-                                <span>🔍</span>
-                            </div>
+                <!-- Chat -->
+                <div id="chat-view" class="view active">
+                    <div class="chat-header">
+                        <span>#</span>
+                        <span id="current-channel-name">Seleciona um canal</span>
+                        <div class="chat-header-actions">
+                            <button onclick="toggleMembersPanel()">👥</button>
+                            <input type="text" id="search-msg" placeholder="Pesquisar" oninput="searchMessages()">
                         </div>
                     </div>
-
-                    <div class="chat-content-wrapper">
-                        <div class="chat-messages" id="chat-box">
-                            <div class="welcome-screen">
-                                <div class="welcome-icon">🐺</div>
-                                <h2>Bem-vindo ao Cord!</h2>
-                                <p>Seleciona um servidor e um canal à esquerda para começar.</p>
-                                <p class="welcome-tip">💡 <b>Dica:</b> Clica no nome de alguém para ver o perfil!</p>
-                                <div class="welcome-actions">
-                                    <button class="btn btn-sm btn-primary" onclick="showServerModal()">➕ Criar Servidor</button>
-                                    <button class="btn btn-sm btn-outline" onclick="showDiscoverModal()">🔍 Descobrir Servidores</button>
-                                </div>
+                    <div class="chat-area">
+                        <div class="messages" id="chat-box">
+                            <div class="welcome">
+                                <h1>🐺 Bem-vindo ao Cord!</h1>
+                                <p>Seleciona um servidor e canal para começar.</p>
                             </div>
                         </div>
-
-                        <!-- Painel de Membros (lateral direita) -->
                         <div class="members-panel" id="members-panel" style="display:none;">
-                            <div class="members-panel-header">
-                                <span>Membros</span>
-                                <button class="icon-btn-sm" onclick="toggleMembersPanel()">✕</button>
-                            </div>
-                            <div class="members-panel-list" id="members-side-list">
-                                <p class="placeholder-text">Carregando...</p>
-                            </div>
+                            <div class="members-header">Membros <button onclick="toggleMembersPanel()">✕</button></div>
+                            <div id="members-list"></div>
                         </div>
                     </div>
-
-                    <div class="chat-input-bar">
-                        <button class="input-action-btn" onclick="showEmojiPicker()" title="Emoji">😊</button>
-                        <textarea class="chat-input" id="msg-input" 
-                                  placeholder="Escreve uma mensagem... (Usa !help para comandos)" 
-                                  rows="1"
-                                  onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
-                        <button class="input-action-btn" onclick="sendMsg()" title="Enviar">📤</button>
+                    <div class="chat-input">
+                        <button onclick="showEmojiPicker()">😊</button>
+                        <textarea id="msg-input" placeholder="Mensagem #canal" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+                        <button onclick="sendMsg()">📤</button>
                     </div>
                 </div>
 
-                <!-- ===== VISÃO DE AMIGOS ===== -->
-                <div id="friends-view" class="view-container panel-view" style="display:none;">
-                    <div class="panel-header">
-                        <h2>👥 Amigos</h2>
-                        <div class="panel-tabs">
-                            <button class="panel-tab active" onclick="switchFriendsTab('all')">Todos</button>
-                            <button class="panel-tab" onclick="switchFriendsTab('online')">Online</button>
-                            <button class="panel-tab" onclick="switchFriendsTab('pending')">Pendentes</button>
-                            <button class="panel-tab" onclick="switchFriendsTab('add')">Adicionar</button>
-                        </div>
-                    </div>
-                    
-                    <div class="panel-content" id="friends-panel-content">
-                        <!-- Adicionar Amigo -->
-                        <div class="card" id="friends-add-card">
-                            <h3>➕ Adicionar Amigo</h3>
-                            <p class="card-desc">O teu código: <span class="code-highlight" id="my-friend-code">#----</span></p>
-                            <div class="input-row">
-                                <input type="text" id="friend-code-input" placeholder="Código do amigo (#0000)" class="input-full">
-                                <button class="btn btn-sm btn-primary" onclick="addFriend()">Adicionar</button>
-                            </div>
-                            <p id="add-friend-result" class="result-msg"></p>
-                        </div>
-                        
-                        <!-- Lista de Amigos -->
-                        <div class="card">
-                            <h3>📋 Os Teus Amigos</h3>
-                            <div id="friends-list" class="scroll-list">
-                                <p class="placeholder-text">Ainda não tens amigos.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- DMs Recentes -->
-                        <div class="card">
-                            <h3>💬 Conversas Recentes</h3>
-                            <div id="dm-list" class="scroll-list">
-                                <p class="placeholder-text">Adiciona amigos para conversar.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ===== VISÃO DE BOTS ===== -->
-                <div id="dashboard-view" class="view-container panel-view" style="display:none;">
-                    <div class="panel-header">
-                        <h2>🤖 Central de Bots</h2>
-                    </div>
-                    
+                <!-- Amigos -->
+                <div id="friends-view" class="view">
+                    <div class="panel-header"><h2>👥 Amigos</h2></div>
                     <div class="panel-content">
-                        <!-- Guia de Bots -->
-                        <div class="card guide-card">
-                            <h3>📖 Como Criar e Usar Bots</h3>
-                            <div class="guide-steps">
-                                <div class="guide-step">
-                                    <span class="step-number">1</span>
-                                    <div>
-                                        <b>Cria um bot</b>
-                                        <p>Dá um nome e descrição. Um token único será gerado.</p>
-                                    </div>
-                                </div>
-                                <div class="guide-step">
-                                    <span class="step-number">2</span>
-                                    <div>
-                                        <b>Adiciona a servidores</b>
-                                        <p>Podes adicionar o bot a quantos servidores quiseres!</p>
-                                    </div>
-                                </div>
-                                <div class="guide-step">
-                                    <span class="step-number">3</span>
-                                    <div>
-                                        <b>Configura comandos</b>
-                                        <p>Define respostas personalizadas: <code>!ola=Olá mundo!</code></p>
-                                    </div>
-                                </div>
-                                <div class="guide-step">
-                                    <span class="step-number">4</span>
-                                    <div>
-                                        <b>Usa o token no teu código</b>
-                                        <p>Copia o token e usa no script do bot (Python, Node.js, etc).</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Criar Bot -->
                         <div class="card">
-                            <h3>➕ Criar Novo Bot</h3>
-                            <div class="form-row">
-                                <div class="input-group">
-                                    <label>Nome do Bot</label>
-                                    <input type="text" id="new-bot-name" placeholder="Ex: SuperBot" maxlength="30" class="input-full">
-                                </div>
-                                <div class="input-group">
-                                    <label>Descrição</label>
-                                    <input type="text" id="new-bot-desc" placeholder="O que este bot faz?" class="input-full">
-                                </div>
-                            </div>
-                            <div class="input-group">
-                                <label>Prefixo do Bot (opcional)</label>
-                                <input type="text" id="new-bot-prefix" placeholder="Ex: ! ou /" maxlength="5" class="input-short" value="!">
-                            </div>
-                            <button class="btn btn-sm btn-primary" onclick="createBot()">🤖 Criar Bot</button>
+                            <h3>➕ Adicionar</h3>
+                            <p>Teu código: <b id="my-code">#----</b></p>
+                            <input type="text" id="friend-input" placeholder="Código #0000">
+                            <button onclick="addFriend()">Adicionar</button>
+                            <p id="friend-result"></p>
                         </div>
-
-                        <!-- Meus Bots -->
                         <div class="card">
-                            <h3>📋 Meus Bots</h3>
-                            <div id="my-bots-list" class="scroll-list">
-                                <p class="placeholder-text">Nenhum bot criado ainda.</p>
-                            </div>
+                            <h3>📋 Lista</h3>
+                            <div id="friends-list"></div>
                         </div>
-
-                        <!-- Adicionar Bot ao Servidor -->
                         <div class="card">
-                            <h3>🔌 Adicionar Bot a Servidores</h3>
-                            <p class="card-desc">Seleciona um bot e um servidor. Podes adicionar o mesmo bot a vários servidores!</p>
-                            <div class="form-row">
-                                <select id="select-bot-to-add" class="input-full">
-                                    <option value="">Seleciona um bot...</option>
-                                </select>
-                                <select id="select-server-to-add" class="input-full">
-                                    <option value="">Seleciona um servidor...</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-sm btn-primary" onclick="addBotToServer()">➕ Adicionar ao Servidor</button>
-                            <div id="bot-servers-list" class="scroll-list" style="margin-top:10px;"></div>
-                        </div>
-
-                        <!-- Como usar no Termux -->
-                        <div class="card code-card">
-                            <h3>💻 Como Programar o Teu Bot (Termux/Node.js)</h3>
-                            <div class="code-block">
-                                <div class="code-header">
-                                    <span>📄 bot.js</span>
-                                    <button class="btn btn-xs" onclick="copyCodeExample()">📋 Copiar</button>
-                                </div>
-                                <pre><code id="code-example">// 1. Instala: pkg install nodejs -y && npm install firebase
-// 2. Cola o teu TOKEN abaixo
-// 3. Executa: node bot.js
-
-const TOKEN = 'COLA_O_TEU_TOKEN_AQUI';
-
-// O bot vai responder automaticamente no chat!
-console.log('🤖 Bot iniciado com token:', TOKEN.substring(0,10)+'...');
-// (Script completo disponível na documentação)</code></pre>
-                            </div>
+                            <h3>💬 Mensagens</h3>
+                            <div id="dm-list"></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ===== VISÃO NITRO ===== -->
-                <div id="nitro-view" class="view-container panel-view" style="display:none;">
-                    <div class="panel-header">
-                        <h2>⭐ Cord Nitro</h2>
-                    </div>
-                    
+                <!-- Nitro -->
+                <div id="nitro-view" class="view">
+                    <div class="panel-header"><h2>⭐ Cord Nitro</h2></div>
                     <div class="panel-content">
                         <div class="nitro-hero">
-                            <div class="nitro-hero-content">
-                                <h2>⭐ Cord Nitro</h2>
-                                <div class="nitro-price-tag">500 🪙/mês</div>
-                                <ul class="nitro-perks">
-                                    <li>✨ Efeitos de perfil exclusivos</li>
-                                    <li>🎨 Nome com gradiente no chat</li>
-                                    <li>💎 Moldura animada no avatar</li>
-                                    <li>🏅 Badge Nitro no perfil</li>
-                                    <li>📁 Upload de ficheiros maiores</li>
-                                    <li>⚡ Suporte prioritário</li>
-                                </ul>
-                                <button class="btn btn-lg" style="background:white;color:#6366f1;font-weight:700;" onclick="buyNitro()">
-                                    ⭐ Assinar Agora
-                                </button>
-                            </div>
+                            <h2>Cord Nitro</h2>
+                            <p class="nitro-price">500 🪙/mês</p>
+                            <ul>
+                                <li>✨ Perfil animado</li>
+                                <li>🎨 Nome colorido</li>
+                                <li>💎 Badge exclusivo</li>
+                                <li>📁 Upload 100MB</li>
+                                <li>🎵 Música em calls</li>
+                                <li>⚡ Prioridade</li>
+                            </ul>
+                            <button onclick="buyNitro()">Assinar Nitro</button>
                         </div>
+                        <div class="card"><h3>💳 Carteira: <span id="balance">0</span> 🪙</h3><button onclick="dailyReward()">🎁 Diário</button></div>
+                        <div class="card"><h3>🎨 Efeitos</h3><div id="effects-shop"></div></div>
+                        <div class="card"><h3>🏅 Badges</h3><div id="badges-shop"></div></div>
+                    </div>
+                </div>
 
-                        <div class="card">
-                            <h3>💳 Carteira</h3>
-                            <p>Saldo: <b class="balance-display" id="nitro-balance">0</b> 🪙</p>
-                            <button class="btn btn-sm btn-primary" onclick="dailyReward()">🎁 Recompensa Diária</button>
+                <!-- Bots -->
+                <div id="bots-view" class="view">
+                    <div class="panel-header"><h2>🤖 Bots</h2></div>
+                    <div class="panel-content">
+                        <div class="card guide">
+                            <h3>📖 Como criar bots</h3>
+                            <p>1. Cria um bot → 2. Copia o token → 3. Adiciona a servidores → 4. Programa!</p>
                         </div>
-
                         <div class="card">
-                            <h3>🎨 Efeitos de Perfil</h3>
-                            <div class="shop-grid" id="profile-effects"></div>
+                            <h3>➕ Novo Bot</h3>
+                            <input id="bot-name" placeholder="Nome">
+                            <input id="bot-desc" placeholder="Descrição">
+                            <button onclick="createBot()">Criar</button>
                         </div>
-
                         <div class="card">
-                            <h3>🏅 Badges</h3>
-                            <div class="shop-grid" id="badges-shop"></div>
+                            <h3>📋 Meus Bots</h3>
+                            <div id="my-bots"></div>
+                        </div>
+                        <div class="card">
+                            <h3>🔌 Adicionar ao Servidor</h3>
+                            <select id="select-bot"></select>
+                            <select id="select-server"></select>
+                            <button onclick="addBotToServer()">Adicionar</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- ===== VISÃO DE MEMBROS (PAINEL COMPLETO) ===== -->
-                <div id="members-view" class="view-container panel-view" style="display:none;">
-                    <div class="panel-header">
-                        <h2>👤 Gestão do Servidor</h2>
+                <!-- Economia -->
+                <div id="economy-view" class="view">
+                    <div class="panel-header"><h2>💰 Economia</h2></div>
+                    <div class="panel-content">
+                        <div class="card"><h3>💳 Carteira: <span id="eco-balance">0</span> 🪙</h3></div>
+                        <div class="card"><h3>🏪 Loja</h3><div id="shop-items"></div></div>
+                        <div class="card"><h3>🏆 Ranking</h3><div id="ranking"></div></div>
+                        <div class="card"><h3>💼 Empregos</h3><div id="jobs-list"></div></div>
                     </div>
-                    
+                </div>
+
+                <!-- Música -->
+                <div id="music-view" class="view">
+                    <div class="panel-header"><h2>🎵 Música</h2></div>
                     <div class="panel-content">
                         <div class="card">
-                            <h3>🔗 Convites</h3>
-                            <p class="card-desc">Partilha este link para convidar pessoas:</p>
-                            <div class="invite-box">
-                                <span class="invite-link" id="invite-link-display">Nenhum convite gerado</span>
-                                <button class="btn btn-xs btn-primary" onclick="copyInviteLink()">📋 Copiar Link</button>
-                            </div>
-                            <button class="btn btn-sm btn-primary" onclick="generateInvite()">🔗 Gerar Novo Convite</button>
-                            
-                            <div style="margin-top:12px;">
-                                <p class="card-desc">Entrar com código:</p>
-                                <div class="input-row">
-                                    <input type="text" id="join-invite-code" placeholder="Código (ex: ABC123)" class="input-full">
-                                    <button class="btn btn-sm btn-primary" onclick="joinServerByInvite()">Entrar</button>
-                                </div>
-                            </div>
+                            <h3>🎧 Tocar Música</h3>
+                            <input id="music-url" placeholder="URL do YouTube">
+                            <button onclick="playMusic()">▶️ Tocar</button>
+                            <div id="now-playing"></div>
                         </div>
-
-                        <div class="card">
-                            <h3>👥 Membros</h3>
-                            <div id="members-list" class="scroll-list">
-                                <p class="placeholder-text">Seleciona um servidor.</p>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <h3>🎖️ Cargos</h3>
-                            <div id="roles-list" class="scroll-list">
-                                <p class="placeholder-text">Nenhum cargo criado.</p>
-                            </div>
-                            <button class="btn btn-xs btn-primary" onclick="addRole()">➕ Criar Cargo</button>
-                        </div>
+                        <div class="card"><h3>📋 Playlist</h3><div id="playlist"></div></div>
                     </div>
                 </div>
 
-                <!-- ===== VISÃO DE DEFINIÇÕES ===== -->
-                <div id="settings-view" class="view-container panel-view" style="display:none;">
-                    <div class="panel-header">
-                        <h2>⚙️ Definições</h2>
+                <!-- Chamadas -->
+                <div id="calls-view" class="view">
+                    <div class="panel-header"><h2>📞 Chamadas</h2></div>
+                    <div class="panel-content">
+                        <div class="card">
+                            <h3>📞 Iniciar Chamada</h3>
+                            <button onclick="startCall()">Iniciar Chamada de Voz</button>
+                            <div id="call-status"></div>
+                        </div>
+                        <div class="card"><h3>👥 Participantes</h3><div id="call-participants"></div></div>
                     </div>
-                    
+                </div>
+
+                <!-- Definições -->
+                <div id="settings-view" class="view">
+                    <div class="panel-header"><h2>⚙️ Definições</h2></div>
                     <div class="panel-content">
                         <div class="card">
                             <h3>👤 Perfil</h3>
-                            <div class="input-group">
-                                <label>Nome</label>
-                                <input type="text" id="settings-username" class="input-full" placeholder="O teu nome">
-                            </div>
-                            <div class="input-group">
-                                <label>Bio</label>
-                                <textarea id="settings-bio" rows="3" class="input-full" placeholder="Escreve algo sobre ti..."></textarea>
-                            </div>
-                            <button class="btn btn-sm btn-primary" onclick="saveProfile()">💾 Guardar</button>
+                            <input id="settings-name" placeholder="Nome">
+                            <textarea id="settings-bio" placeholder="Bio"></textarea>
+                            <button onclick="saveProfile()">Guardar</button>
                         </div>
-
                         <div class="card">
-                            <h3>🎨 Aparência</h3>
-                            <div class="input-group">
-                                <label>Tema</label>
-                                <select id="theme-select" onchange="changeTheme(this.value)" class="input-full">
-                                    <option value="dark">🌙 Escuro</option>
-                                    <option value="light">☀️ Claro</option>
-                                    <option value="midnight">🌑 Meia-Noite</option>
-                                    <option value="ocean">🌊 Oceano</option>
-                                </select>
-                            </div>
+                            <h3>🎨 Tema</h3>
+                            <select id="theme-select" onchange="changeTheme(this.value)">
+                                <option value="dark">Escuro</option>
+                                <option value="light">Claro</option>
+                                <option value="midnight">Meia-noite</option>
+                            </select>
                         </div>
-
-                        <div class="card">
-                            <h3>📦 Inventário</h3>
-                            <div id="inventory-list" class="scroll-list">
-                                <p class="placeholder-text">Vazio. Visita a loja Nitro!</p>
-                            </div>
-                        </div>
+                        <div class="card"><h3>📦 Inventário</h3><div id="inventory"></div></div>
                     </div>
                 </div>
-
             </main>
         </div>
     </div>
 
-    <!-- =============================================
-         MODAIS
-         ============================================= -->
-    
-    <!-- Modal Criar Servidor -->
+    <!-- Modais -->
     <div class="modal-overlay" id="server-modal">
         <div class="modal">
-            <h3>🆕 Criar Servidor</h3>
-            <p class="modal-desc">Cria o teu próprio servidor e convida amigos!</p>
-            <div class="input-group">
-                <label>Nome do Servidor</label>
-                <input type="text" id="server-name" placeholder="Ex: O Meu Servidor" maxlength="50" class="input-full">
-            </div>
-            <div class="input-group">
-                <label>Modelo</label>
-                <select id="server-template" class="input-full">
-                    <option value="default">🏠 Servidor Padrão</option>
-                    <option value="gaming">🎮 Gaming</option>
-                    <option value="study">📚 Estudos</option>
-                    <option value="art">🎨 Arte</option>
-                </select>
-            </div>
-            <div class="modal-buttons">
+            <h3>Criar Servidor</h3>
+            <input id="server-name" placeholder="Nome do servidor">
+            <select id="server-template">
+                <option value="default">Padrão</option>
+                <option value="gaming">Gaming</option>
+                <option value="study">Estudos</option>
+            </select>
+            <div class="modal-btns">
                 <button class="btn-cancel" onclick="closeModal('server-modal')">Cancelar</button>
-                <button class="btn-confirm" onclick="createServer()">Criar Servidor</button>
+                <button class="btn-confirm" onclick="createServer()">Criar</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Criar Canal -->
     <div class="modal-overlay" id="channel-modal">
         <div class="modal">
-            <h3>🆕 Criar Canal</h3>
-            <div class="input-group">
-                <label>Tipo de Canal</label>
-                <select id="channel-type" class="input-full">
-                    <option value="text">💬 Texto</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>Nome do Canal</label>
-                <input type="text" id="channel-name" placeholder="Ex: geral" maxlength="30" class="input-full">
-            </div>
-            <div class="modal-buttons">
+            <h3>Criar Canal</h3>
+            <input id="channel-name" placeholder="Nome do canal">
+            <div class="modal-btns">
                 <button class="btn-cancel" onclick="closeModal('channel-modal')">Cancelar</button>
-                <button class="btn-confirm" onclick="createChannel()">Criar Canal</button>
+                <button class="btn-confirm" onclick="createChannel()">Criar</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal Descobrir Servidores -->
     <div class="modal-overlay" id="discover-modal">
-        <div class="modal modal-lg">
+        <div class="modal">
             <h3>🔍 Descobrir Servidores</h3>
-            <p class="modal-desc">Encontra servidores públicos para entrar!</p>
-            <div class="input-group">
-                <input type="text" id="discover-search" placeholder="Pesquisar servidores..." class="input-full" onkeyup="searchPublicServers()">
-            </div>
-            <div id="discover-results" class="scroll-list">
-                <p class="placeholder-text">A pesquisar...</p>
-            </div>
-            <div class="modal-buttons">
-                <button class="btn-cancel" onclick="closeModal('discover-modal')">Fechar</button>
-            </div>
+            <input id="discover-search" placeholder="Pesquisar..." oninput="searchServers()">
+            <div id="discover-results"></div>
+            <button class="btn-cancel" onclick="closeModal('discover-modal')">Fechar</button>
         </div>
     </div>
 
-    <!-- Toast -->
     <div class="toast" id="toast"></div>
-
-    <!-- =============================================
-         JAVASCRIPT
-         ============================================= -->
     <script src="script.js"></script>
 </body>
 </html>
