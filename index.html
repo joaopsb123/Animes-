@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cord - Chat App</title>
+    <title>Cord - Chat com Bots</title>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -19,6 +19,7 @@
             --green: #57f287;
             --red: #ed4245;
             --yellow: #fee75c;
+            --orange: #faa81a;
             --input-bg: #202225;
         }
 
@@ -31,11 +32,9 @@
             height: 100vh;
             overflow: hidden;
             -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            user-select: none;
         }
 
-        /* ===== AUTENTICAÇÃO ===== */
+        /* ===== AUTH ===== */
         #auth-container {
             position: fixed;
             inset: 0;
@@ -52,525 +51,142 @@
             padding: 30px 25px;
             border-radius: 12px;
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
 
-        .auth-box h1 {
-            font-size: 24px;
-            margin-bottom: 8px;
-            color: white;
-            text-align: center;
-        }
+        .auth-box h1 { font-size: 28px; margin-bottom: 4px; color: white; text-align: center; }
+        .auth-box .subtitle { text-align: center; color: var(--text-muted); margin-bottom: 20px; font-size: 14px; }
+        
+        .auth-tabs { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; background: var(--input-bg); }
+        .auth-tab { flex: 1; padding: 12px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
+        .auth-tab.active { background: var(--blurple); color: white; }
 
-        .auth-box p {
-            text-align: center;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; letter-spacing: 0.5px; }
+        .form-group input { width: 100%; padding: 12px; background: var(--input-bg); border: 1px solid transparent; border-radius: 6px; color: white; font-size: 15px; outline: none; transition: border 0.2s; }
+        .form-group input:focus { border-color: var(--blurple); }
 
-        .auth-tabs {
-            display: flex;
-            gap: 0;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .auth-tab {
-            flex: 1;
-            padding: 12px;
-            background: var(--input-bg);
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .auth-tab.active {
-            background: var(--blurple);
-            color: white;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            letter-spacing: 0.5px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 14px;
-            background: var(--input-bg);
-            border: 1px solid transparent;
-            border-radius: 6px;
-            color: white;
-            font-size: 15px;
-            transition: border 0.2s;
-            outline: none;
-        }
-
-        .form-group input:focus {
-            border-color: var(--blurple);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 13px;
-            border: none;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: white;
-        }
-
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 6px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; color: white; }
         .btn-primary { background: var(--blurple); }
         .btn-primary:hover { background: var(--blurple-hover); }
-        .btn-google { background: #4285f4; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-google:hover { background: #3367d6; }
-        .btn-danger { background: var(--red); margin-top: 8px; }
+        .btn-danger { background: var(--red); }
         .btn-danger:hover { background: #c03537; }
-        .btn-sm { padding: 8px 14px; font-size: 13px; width: auto; border-radius: 4px; }
+        .btn-google { background: #4285f4; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-google:hover { background: #3367d6; }
+        .btn-sm { padding: 8px 16px; font-size: 13px; width: auto; border-radius: 4px; }
+        .btn-xs { padding: 5px 10px; font-size: 11px; width: auto; border-radius: 3px; }
 
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 18px 0;
-            color: var(--text-muted);
-            font-size: 13px;
-        }
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--bg-tertiary);
-        }
+        .divider { display: flex; align-items: center; margin: 18px 0; color: var(--text-muted); font-size: 13px; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--bg-tertiary); }
         .divider span { margin: 0 12px; }
 
-        .error-msg {
-            color: var(--red);
-            font-size: 13px;
-            margin-top: 8px;
-            display: none;
-        }
+        .error-msg { color: var(--red); font-size: 13px; margin-top: 6px; display: none; }
 
-        /* ===== APP PRINCIPAL ===== */
-        #app-container {
-            display: none;
-            height: 100vh;
-            flex-direction: column;
-        }
+        /* ===== APP ===== */
+        #app-container { display: none; height: 100vh; flex-direction: column; }
 
-        /* Top Bar Mobile */
-        .topbar {
-            display: none;
-            background: var(--bg-secondary);
-            padding: 10px 15px;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #202225;
-            min-height: 50px;
-        }
+        .topbar { display: none; background: var(--bg-secondary); padding: 10px 15px; align-items: center; justify-content: space-between; border-bottom: 1px solid #202225; min-height: 50px; z-index: 50; }
+        .hamburger { background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 5px; }
 
-        .hamburger {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .user-info-top {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .avatar-sm {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--blurple);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        /* Layout Desktop/Mobile */
-        .app-layout {
-            display: flex;
-            flex: 1;
-            height: calc(100vh - 0px);
-        }
+        .app-layout { display: flex; flex: 1; height: calc(100vh - 0px); }
 
         /* Sidebar */
-        .sidebar {
-            width: 260px;
-            min-width: 260px;
-            background: var(--bg-secondary);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #202225;
-            transition: transform 0.3s ease;
-            z-index: 100;
-        }
-
-        .sidebar-header {
-            padding: 15px;
-            border-bottom: 1px solid #202225;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .sidebar-header h3 {
-            font-size: 15px;
-            color: white;
-        }
-
-        .server-list-section, .channel-list-section {
-            padding: 10px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .section-title {
-            font-size: 11px;
-            text-transform: uppercase;
-            font-weight: 700;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .server-item, .channel-item {
-            padding: 8px 12px;
-            margin: 2px 0;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background 0.15s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-muted);
-        }
-
+        .sidebar { width: 260px; min-width: 260px; background: var(--bg-secondary); display: flex; flex-direction: column; border-right: 1px solid #202225; transition: transform 0.3s ease; z-index: 100; }
+        .sidebar-header { padding: 15px; border-bottom: 1px solid #202225; display: flex; align-items: center; justify-content: space-between; }
+        .sidebar-header h3 { font-size: 15px; color: white; }
+        .server-list-section, .channel-list-section { padding: 10px; overflow-y: auto; }
+        .channel-list-section { flex: 1; }
+        .section-title { font-size: 11px; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+        .server-item, .channel-item { padding: 8px 12px; margin: 2px 0; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.15s; display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
         .server-item:hover, .channel-item:hover { background: #35373c; color: white; }
         .server-item.active { background: #42464d; color: white; }
         .channel-item.active { background: #42464d; color: white; }
-
-        .server-icon {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #747f8d;
-        }
+        .server-icon { width: 14px; height: 14px; border-radius: 50%; background: #747f8d; flex-shrink: 0; }
         .server-item.active .server-icon { background: var(--green); }
-
         .hash { color: var(--text-muted); font-weight: 700; }
+        .sidebar-footer { padding: 10px 15px; border-top: 1px solid #202225; display: flex; align-items: center; gap: 10px; background: #292b2f; }
+        .avatar-sm { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: white; flex-shrink: 0; }
+        .sidebar-footer .username { font-size: 13px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        .sidebar-footer {
-            padding: 10px 15px;
-            border-top: 1px solid #202225;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #292b2f;
-        }
+        /* Nav buttons */
+        .nav-buttons { display: flex; gap: 4px; margin-top: 10px; }
+        .nav-btn { flex: 1; padding: 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 600; background: var(--bg-tertiary); color: var(--text-muted); transition: 0.2s; }
+        .nav-btn.active { background: var(--blurple); color: white; }
+        .nav-btn:hover { background: #4e535c; }
 
-        .sidebar-footer .avatar-sm { width: 28px; height: 28px; font-size: 12px; }
-        .sidebar-footer .username { font-size: 13px; font-weight: 600; flex: 1; }
-        .sidebar-footer button {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 16px;
-            padding: 4px;
-        }
-        .sidebar-footer button:hover { color: var(--red); }
-
-        /* Chat Area */
-        .main-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: var(--bg-primary);
-            min-width: 0;
-        }
-
-        .chat-header {
-            padding: 12px 20px;
-            border-bottom: 1px solid #202225;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-height: 48px;
-            background: var(--bg-primary);
-            font-weight: 600;
-            font-size: 15px;
-        }
-
-        .chat-header .hash { font-size: 20px; }
-
-        .chat-messages {
-            flex: 1;
-            padding: 15px 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .message {
-            display: flex;
-            gap: 12px;
-            padding: 4px 0;
-            border-radius: 4px;
-            transition: background 0.1s;
-        }
+        /* Main */
+        .main-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); min-width: 0; }
+        .chat-header { padding: 12px 20px; border-bottom: 1px solid #202225; display: flex; align-items: center; gap: 8px; min-height: 48px; font-weight: 600; font-size: 15px; }
+        .chat-messages { flex: 1; padding: 15px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+        .message { display: flex; gap: 12px; padding: 4px 0; border-radius: 4px; }
         .message:hover { background: rgba(255,255,255,0.02); }
+        .message-avatar { width: 40px; height: 40px; min-width: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; margin-top: 2px; }
+        .message-content { flex: 1; min-width: 0; }
+        .message-header { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; flex-wrap: wrap; }
+        .message-username { font-weight: 600; font-size: 15px; color: white; }
+        .bot-tag { background: var(--blurple); color: white; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+        .system-tag { background: #747f8d; color: white; font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 700; }
+        .message-time { font-size: 11px; color: var(--text-muted); }
+        .message-text { font-size: 15px; line-height: 1.4; word-break: break-word; }
+        .mention { color: #7289da; background: rgba(114,137,218,0.1); padding: 0 2px; border-radius: 3px; }
+        .code { background: var(--input-bg); padding: 2px 6px; border-radius: 3px; font-family: 'Consolas', monospace; font-size: 13px; }
 
-        .message-avatar {
-            width: 40px;
-            height: 40px;
-            min-width: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 2px;
-        }
-
-        .message-content {
-            flex: 1;
-        }
-
-        .message-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 2px;
-        }
-
-        .message-username {
-            font-weight: 600;
-            font-size: 15px;
-            color: white;
-        }
-
-        .bot-tag {
-            background: var(--blurple);
-            color: white;
-            font-size: 10px;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-
-        .system-tag {
-            background: #747f8d;
-            color: white;
-            font-size: 10px;
-            padding: 1px 5px;
-            border-radius: 3px;
-            font-weight: 700;
-        }
-
-        .message-time {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .message-text {
-            font-size: 15px;
-            line-height: 1.4;
-            word-break: break-word;
-            color: var(--text-normal);
-        }
-
-        .message-text .mention {
-            color: #7289da;
-            background: rgba(114,137,218,0.1);
-            padding: 0 2px;
-            border-radius: 3px;
-        }
-
-        .message-text .code {
-            background: var(--input-bg);
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Consolas', monospace;
-            font-size: 13px;
-        }
-
-        /* Input */
-        .chat-input-area {
-            padding: 12px 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            background: var(--bg-primary);
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 12px 16px;
-            background: var(--input-bg);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 15px;
-            outline: none;
-            resize: none;
-            min-height: 44px;
-            max-height: 120px;
-        }
-
-        .chat-input:focus {
-            box-shadow: 0 0 0 2px var(--blurple);
-        }
-
-        .send-btn {
-            background: var(--blurple);
-            border: none;
-            border-radius: 8px;
-            width: 44px;
-            height: 44px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            transition: background 0.2s;
-            flex-shrink: 0;
-        }
+        .chat-input-area { padding: 12px 20px; display: flex; gap: 10px; align-items: center; }
+        .chat-input { flex: 1; padding: 12px 16px; background: var(--input-bg); border: none; border-radius: 8px; color: white; font-size: 15px; outline: none; min-height: 44px; max-height: 120px; resize: none; }
+        .chat-input:focus { box-shadow: 0 0 0 2px var(--blurple); }
+        .send-btn { background: var(--blurple); border: none; border-radius: 8px; width: 44px; height: 44px; cursor: pointer; font-size: 20px; transition: 0.2s; flex-shrink: 0; color: white; }
         .send-btn:hover { background: var(--blurple-hover); }
-        .send-btn:active { transform: scale(0.95); }
 
-        /* Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 200;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+        /* Dashboard */
+        .dashboard { flex: 1; padding: 25px; overflow-y: auto; display: none; }
+        .dashboard h2 { color: white; margin-bottom: 20px; font-size: 22px; }
+        .dash-section { background: var(--bg-secondary); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+        .dash-section h3 { color: white; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .bot-card { background: var(--bg-tertiary); border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; }
+        .bot-info { flex: 1; min-width: 150px; }
+        .bot-name { font-weight: 600; color: white; font-size: 15px; }
+        .bot-status { font-size: 12px; margin-top: 3px; }
+        .bot-status.online { color: var(--green); }
+        .bot-status.offline { color: var(--text-muted); }
+        .token-display { background: var(--input-bg); padding: 8px 12px; border-radius: 4px; font-family: 'Consolas', monospace; font-size: 12px; color: var(--text-muted); word-break: break-all; max-width: 250px; cursor: pointer; position: relative; }
+        .token-display:hover { color: white; }
+        .copied-tooltip { position: absolute; top: -25px; right: 0; background: var(--green); color: #000; padding: 2px 8px; border-radius: 3px; font-size: 10px; font-weight: 600; opacity: 0; transition: 0.2s; pointer-events: none; }
+        .copied-tooltip.show { opacity: 1; }
 
-        .modal {
-            background: var(--bg-secondary);
-            border-radius: 12px;
-            padding: 25px;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
-        }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 10px; font-size: 16px; }
+        .empty-state .icon { font-size: 60px; }
 
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: center; padding: 20px; }
+        .modal { background: var(--bg-secondary); border-radius: 12px; padding: 25px; width: 100%; max-width: 460px; box-shadow: 0 16px 48px rgba(0,0,0,0.5); }
         .modal h3 { margin-bottom: 15px; color: white; }
-        .modal input {
-            width: 100%;
-            padding: 12px;
-            background: var(--input-bg);
-            border: none;
-            border-radius: 6px;
-            color: white;
-            margin-bottom: 10px;
-            font-size: 14px;
-            outline: none;
-        }
-        .modal input:focus { box-shadow: 0 0 0 2px var(--blurple); }
-        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
-        .modal-buttons button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
-        .btn-cancel { background: #747f8d; color: white; }
-        .btn-cancel:hover { background: #5e6a78; }
-        .btn-confirm { background: var(--blurple); color: white; }
-        .btn-confirm:hover { background: var(--blurple-hover); }
+        .modal input, .modal textarea { width: 100%; padding: 12px; background: var(--input-bg); border: none; border-radius: 6px; color: white; margin-bottom: 10px; font-size: 14px; outline: none; font-family: inherit; resize: vertical; }
+        .modal input:focus, .modal textarea:focus { box-shadow: 0 0 0 2px var(--blurple); }
+        .modal textarea { min-height: 80px; }
+        .modal label { font-size: 12px; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 5px; text-transform: uppercase; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 5px; }
+        .btn-cancel { background: #747f8d; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-confirm { background: var(--blurple); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
 
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #202225;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            z-index: 300;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-        }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #202225; color: white; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; z-index: 300; opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
         .toast.show { opacity: 1; }
         .toast.error { background: var(--red); }
-
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-muted);
-            gap: 10px;
-            font-size: 16px;
-        }
-        .empty-state .icon { font-size: 60px; }
 
         /* Mobile */
         @media (max-width: 768px) {
             .topbar { display: flex; }
-            .sidebar {
-                position: fixed;
-                left: 0;
-                top: 0;
-                height: 100vh;
-                z-index: 150;
-                transform: translateX(-100%);
-                width: 280px;
-            }
+            .sidebar { position: fixed; left: 0; top: 0; height: 100vh; z-index: 150; transform: translateX(-100%); width: 280px; }
             .sidebar.open { transform: translateX(0); }
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                inset: 0;
-                background: rgba(0,0,0,0.6);
-                z-index: 140;
-            }
+            .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 140; }
             .sidebar-overlay.show { display: block; }
             .chat-messages { padding: 10px 12px; }
-            .chat-input-area { padding: 8px 12px; gap: 8px; }
+            .chat-input-area { padding: 8px 12px; }
             .message-avatar { width: 32px; height: 32px; min-width: 32px; font-size: 13px; }
             .message-username { font-size: 13px; }
             .message-text { font-size: 14px; }
-            .auth-box { padding: 20px 16px; }
+            .dashboard { padding: 15px; }
+            .bot-card { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -580,140 +196,121 @@
 <div id="auth-container">
     <div class="auth-box">
         <h1>🐺 Cord</h1>
-        <p>O teu chat com bots personalizados</p>
-        
+        <p class="subtitle">Chat com bots personalizados</p>
         <div class="auth-tabs">
-            <button class="auth-tab active" onclick="switchAuthTab('login')" id="tab-login">Entrar</button>
-            <button class="auth-tab" onclick="switchAuthTab('register')" id="tab-register">Registar</button>
+            <button class="auth-tab active" onclick="switchAuth('login')" id="tab-login">Entrar</button>
+            <button class="auth-tab" onclick="switchAuth('register')" id="tab-register">Registar</button>
         </div>
-
-        <!-- Login -->
         <form id="form-login" onsubmit="handleLogin(event)">
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="login-email" placeholder="exemplo@email.com" required>
-            </div>
-            <div class="form-group">
-                <label>Senha</label>
-                <input type="password" id="login-password" placeholder="••••••••" required>
-            </div>
+            <div class="form-group"><label>Email</label><input type="email" id="login-email" placeholder="exemplo@email.com" required></div>
+            <div class="form-group"><label>Senha</label><input type="password" id="login-password" placeholder="••••••••" required></div>
             <p class="error-msg" id="login-error"></p>
-            <button type="submit" class="btn btn-primary">Entrar</button>
+            <button class="btn btn-primary">Entrar</button>
         </form>
-
-        <!-- Register -->
         <form id="form-register" onsubmit="handleRegister(event)" style="display:none;">
-            <div class="form-group">
-                <label>Nome de utilizador</label>
-                <input type="text" id="reg-username" placeholder="Como te chamas?" required minlength="3">
-            </div>
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" id="reg-email" placeholder="exemplo@email.com" required>
-            </div>
-            <div class="form-group">
-                <label>Senha</label>
-                <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required minlength="6">
-            </div>
+            <div class="form-group"><label>Nome</label><input type="text" id="reg-username" placeholder="Como te chamas?" required minlength="3"></div>
+            <div class="form-group"><label>Email</label><input type="email" id="reg-email" placeholder="exemplo@email.com" required></div>
+            <div class="form-group"><label>Senha</label><input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" required minlength="6"></div>
             <p class="error-msg" id="reg-error"></p>
-            <button type="submit" class="btn btn-primary">Criar Conta</button>
+            <button class="btn btn-primary">Criar Conta</button>
         </form>
-
         <div class="divider"><span>ou</span></div>
-        <button class="btn btn-google" onclick="loginWithGoogle()">
-            <span>G</span> Continuar com Google
-        </button>
+        <button class="btn btn-google" onclick="loginGoogle()">🔵 Continuar com Google</button>
     </div>
 </div>
 
 <!-- ==================== APP ==================== -->
 <div id="app-container">
-    <!-- Topbar Mobile -->
     <div class="topbar">
         <button class="hamburger" onclick="toggleSidebar()">☰</button>
-        <span style="font-weight:600;">Cord</span>
-        <div class="user-info-top">
-            <div class="avatar-sm" id="avatar-top"></div>
-        </div>
+        <span style="font-weight:600;" id="topbar-title">Cord</span>
+        <div class="avatar-sm" id="avatar-top" style="width:32px;height:32px;"></div>
     </div>
-
-    <!-- Sidebar Overlay -->
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <div class="app-layout">
-        <!-- Sidebar -->
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h3>🐺 Servidores</h3>
-                <button class="btn btn-sm btn-primary" onclick="showServerModal()" style="font-size:18px;padding:4px 10px;">+</button>
+                <h3>🐺 Cord</h3>
+                <button class="btn btn-sm btn-primary" onclick="showServerModal()" style="padding:4px 10px;font-size:18px;">+</button>
+            </div>
+            <div class="nav-buttons" style="padding: 0 10px;">
+                <button class="nav-btn active" id="nav-chat" onclick="switchView('chat')">💬 Chat</button>
+                <button class="nav-btn" id="nav-dash" onclick="switchView('dashboard')">🤖 Bots</button>
             </div>
             <div class="server-list-section">
                 <div class="section-title">SERVIDORES</div>
                 <div id="server-list"></div>
             </div>
             <div class="channel-list-section">
-                <div class="section-title">
-                    CANAIS
-                    <button class="btn btn-sm btn-primary" onclick="showChannelModal()" style="font-size:12px;padding:2px 8px;">+</button>
-                </div>
+                <div class="section-title">CANAIS <button class="btn btn-xs btn-primary" onclick="showChannelModal()">+</button></div>
                 <div id="channel-list"></div>
             </div>
             <div class="sidebar-footer">
                 <div class="avatar-sm" id="avatar-footer"></div>
                 <span class="username" id="username-footer"></span>
-                <button onclick="logout()" title="Sair">🚪</button>
+                <button onclick="logout()" title="Sair" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;">🚪</button>
             </div>
         </div>
 
-        <!-- Chat -->
         <div class="main-area">
-            <div class="chat-header" id="chat-header">
-                <span class="hash">#</span> <span id="current-channel-name">Seleciona um canal</span>
-            </div>
-            <div class="chat-messages" id="chat-box">
-                <div class="empty-state">
-                    <span class="icon">💬</span>
-                    <span>Seleciona um servidor e canal para começar</span>
-                    <span style="font-size:13px;">Ou cria um novo servidor!</span>
+            <!-- Chat View -->
+            <div id="chat-view">
+                <div class="chat-header"><span class="hash">#</span> <span id="current-channel-name">Seleciona um canal</span></div>
+                <div class="chat-messages" id="chat-box">
+                    <div class="empty-state"><span class="icon">💬</span><span>Seleciona um servidor e canal</span></div>
+                </div>
+                <div class="chat-input-area">
+                    <input class="chat-input" id="msg-input" placeholder="Mensagem... (!help para comandos)" onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}" />
+                    <button class="send-btn" onclick="sendMsg()">➤</button>
                 </div>
             </div>
-            <div class="chat-input-area">
-                <input class="chat-input" id="msg-input" placeholder="Escreve uma mensagem..." onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}" />
-                <button class="send-btn" onclick="sendMsg()">➤</button>
+
+            <!-- Dashboard View -->
+            <div class="dashboard" id="dashboard-view" style="display:none;">
+                <h2>🤖 Dashboard de Bots</h2>
+                <div class="dash-section">
+                    <h3>➕ Criar Novo Bot</h3>
+                    <div class="form-group"><label>Nome do Bot</label><input id="new-bot-name" placeholder="Ex: MeuBot" maxlength="30"></div>
+                    <div class="form-group"><label>Descrição</label><input id="new-bot-desc" placeholder="O que o bot faz?"></div>
+                    <button class="btn btn-primary" onclick="createBot()" style="width:auto;margin-top:5px;">Criar Bot 🤖</button>
+                </div>
+                <div class="dash-section">
+                    <h3>📋 Meus Bots</h3>
+                    <div id="my-bots-list">
+                        <p style="color:var(--text-muted);">Nenhum bot criado ainda.</p>
+                    </div>
+                </div>
+                <div class="dash-section" style="background:#2a1f1f; border: 1px solid #5c1a1a;">
+                    <h3>🔌 Como usar o teu bot</h3>
+                    <p style="font-size:13px;color:var(--text-muted);line-height:1.6;">
+                        1. Cria um bot acima<br>
+                        2. Copia o <b>Token</b> gerado<br>
+                        3. Usa o token no teu código (Python, Node.js, etc)<br>
+                        4. O bot conecta-se e responde a comandos!<br><br>
+                        <code style="background:#111;padding:4px 8px;border-radius:3px;">!ping</code> -
+                        <code style="background:#111;padding:4px 8px;border-radius:3px;">!hora</code> -
+                        <code style="background:#111;padding:4px 8px;border-radius:3px;">!dado</code> -
+                        <code style="background:#111;padding:4px 8px;border-radius:3px;">!moeda</code> -
+                        <code style="background:#111;padding:4px 8px;border-radius:3px;">!serverinfo</code>
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Servidor -->
+<!-- Modals -->
 <div class="modal-overlay" id="server-modal">
-    <div class="modal">
-        <h3>Criar Servidor</h3>
-        <input id="server-name" placeholder="Nome do servidor" maxlength="50" />
-        <div class="modal-buttons">
-            <button class="btn-cancel" onclick="closeServerModal()">Cancelar</button>
-            <button class="btn-confirm" onclick="createServer()">Criar</button>
-        </div>
-    </div>
+    <div class="modal"><h3>Criar Servidor</h3><input id="server-name" placeholder="Nome do servidor" maxlength="50"><div class="modal-buttons"><button class="btn-cancel" onclick="closeModal('server-modal')">Cancelar</button><button class="btn-confirm" onclick="createServer()">Criar</button></div></div>
 </div>
-
-<!-- Modal Canal -->
 <div class="modal-overlay" id="channel-modal">
-    <div class="modal">
-        <h3>Criar Canal</h3>
-        <input id="channel-name" placeholder="Nome do canal" maxlength="30" />
-        <div class="modal-buttons">
-            <button class="btn-cancel" onclick="closeChannelModal()">Cancelar</button>
-            <button class="btn-confirm" onclick="createChannel()">Criar</button>
-        </div>
-    </div>
+    <div class="modal"><h3>Criar Canal</h3><input id="channel-name" placeholder="Nome do canal" maxlength="30"><div class="modal-buttons"><button class="btn-cancel" onclick="closeModal('channel-modal')">Cancelar</button><button class="btn-confirm" onclick="createChannel()">Criar</button></div></div>
 </div>
-
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
-    // Firebase Init
+    // ============ FIREBASE ============
     firebase.initializeApp({
         apiKey: "AIzaSyCnRAOY08ABtG87T2ioDM4lzYgDB6q3rBw",
         authDomain: "cord-c6f05.firebaseapp.com",
@@ -725,14 +322,18 @@
 
     const auth = firebase.auth();
     const db = firebase.firestore();
+    
+    // Ativar persistência offline
+    db.enablePersistence().catch(err => console.log('Persistência:', err.code));
 
     let currentUser = null;
     let currentServer = null;
     let currentChannel = null;
     let unsubMessages = null;
+    let currentView = 'chat';
 
     // ============ AUTH ============
-    function switchAuthTab(tab) {
+    function switchAuth(tab) {
         document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
         document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
         document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
@@ -741,94 +342,102 @@
         document.getElementById('reg-error').style.display = 'none';
     }
 
-    function handleLogin(e) {
+    async function handleLogin(e) {
         e.preventDefault();
-        const email = document.getElementById('login-email').value.trim();
-        const pass = document.getElementById('login-password').value;
         const errEl = document.getElementById('login-error');
         errEl.style.display = 'none';
-
-        auth.signInWithEmailAndPassword(email, pass)
-            .catch(err => {
-                errEl.textContent = traduzErro(err.code);
-                errEl.style.display = 'block';
-            });
+        try {
+            await auth.signInWithEmailAndPassword(document.getElementById('login-email').value.trim(), document.getElementById('login-password').value);
+        } catch(err) {
+            errEl.textContent = traduzErro(err.code);
+            errEl.style.display = 'block';
+        }
     }
 
-    function handleRegister(e) {
+    async function handleRegister(e) {
         e.preventDefault();
         const username = document.getElementById('reg-username').value.trim();
         const email = document.getElementById('reg-email').value.trim();
         const pass = document.getElementById('reg-password').value;
         const errEl = document.getElementById('reg-error');
         errEl.style.display = 'none';
-
-        if (username.length < 3) {
-            errEl.textContent = 'Nome muito curto (mínimo 3 caracteres)';
+        if (username.length < 3) { errEl.textContent = 'Nome muito curto'; errEl.style.display = 'block'; return; }
+        try {
+            const cred = await auth.createUserWithEmailAndPassword(email, pass);
+            await cred.user.updateProfile({ displayName: username });
+            await db.collection('users').doc(cred.user.uid).set({
+                username, email,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                avatar: ''
+            }, { merge: true });
+        } catch(err) {
+            errEl.textContent = traduzErro(err.code);
             errEl.style.display = 'block';
-            return;
         }
-
-        auth.createUserWithEmailAndPassword(email, pass)
-            .then(cred => {
-                return cred.user.updateProfile({ displayName: username }).then(() => {
-                    return db.collection('users').doc(cred.user.uid).set({
-                        username: username,
-                        email: email,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                });
-            })
-            .catch(err => {
-                errEl.textContent = traduzErro(err.code);
-                errEl.style.display = 'block';
-            });
     }
 
-    function loginWithGoogle() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider).then(cred => {
-            return db.collection('users').doc(cred.user.uid).set({
+    async function loginGoogle() {
+        try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            const cred = await auth.signInWithPopup(provider);
+            await db.collection('users').doc(cred.user.uid).set({
                 username: cred.user.displayName || 'Usuário',
                 email: cred.user.email,
                 photoURL: cred.user.photoURL || '',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
-        }).catch(err => toast('Erro ao entrar com Google', true));
+        } catch(err) { toast('Erro ao entrar com Google', true); }
     }
 
-    function logout() {
-        auth.signOut();
-    }
+    function logout() { auth.signOut(); }
 
     function traduzErro(code) {
         const map = {
             'auth/user-not-found': 'Email não encontrado',
             'auth/wrong-password': 'Senha incorreta',
-            'auth/email-already-in-use': 'Este email já está registado',
+            'auth/email-already-in-use': 'Email já registado',
             'auth/invalid-email': 'Email inválido',
-            'auth/weak-password': 'Senha muito fraca (mínimo 6)',
-            'auth/too-many-requests': 'Muitas tentativas. Aguarda um pouco.',
-            'auth/network-request-failed': 'Erro de rede. Verifica a internet.'
+            'auth/weak-password': 'Senha fraca (mín 6)',
+            'auth/too-many-requests': 'Muitas tentativas. Aguarda.',
+            'auth/network-request-failed': 'Erro de rede.'
         };
-        return map[code] || 'Erro desconhecido. Tenta de novo.';
+        return map[code] || 'Erro. Tenta de novo.';
     }
 
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async (user) => {
         if (user) {
             currentUser = user;
             document.getElementById('auth-container').style.display = 'none';
             document.getElementById('app-container').style.display = 'flex';
-            document.getElementById('avatar-top').textContent = (user.displayName || user.email)[0].toUpperCase();
-            document.getElementById('avatar-footer').textContent = (user.displayName || user.email)[0].toUpperCase();
+            const initial = (user.displayName || user.email)[0].toUpperCase();
+            ['avatar-top', 'avatar-footer'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) { el.textContent = initial; el.style.background = stringToColor(user.displayName || user.email); }
+            });
             document.getElementById('username-footer').textContent = user.displayName || user.email.split('@')[0];
+            document.getElementById('topbar-title').textContent = user.displayName || 'Cord';
             loadServers();
+            loadMyBots();
         } else {
             currentUser = null;
             document.getElementById('auth-container').style.display = 'flex';
             document.getElementById('app-container').style.display = 'none';
+            if (unsubMessages) { unsubMessages(); unsubMessages = null; }
         }
     });
+
+    // ============ VIEWS ============
+    function switchView(view) {
+        currentView = view;
+        document.getElementById('nav-chat').classList.toggle('active', view === 'chat');
+        document.getElementById('nav-dash').classList.toggle('active', view === 'dashboard');
+        document.getElementById('chat-view').style.display = view === 'chat' ? 'flex' : 'none';
+        document.getElementById('chat-view').style.flexDirection = 'column';
+        document.getElementById('chat-view').style.height = '100%';
+        document.getElementById('dashboard-view').style.display = view === 'dashboard' ? 'block' : 'none';
+        if (view === 'dashboard') loadMyBots();
+        if (window.innerWidth <= 768 && document.getElementById('sidebar').classList.contains('open')) toggleSidebar();
+    }
 
     // ============ SERVIDORES ============
     function loadServers() {
@@ -837,9 +446,7 @@
           .onSnapshot(snapshot => {
               const list = document.getElementById('server-list');
               list.innerHTML = '';
-              if (snapshot.empty) {
-                  list.innerHTML = '<p style="color:#b9bbbe;font-size:12px;padding:8px;">Nenhum servidor. Cria um!</p>';
-              }
+              if (snapshot.empty) list.innerHTML = '<p style="color:#b9bbbe;font-size:12px;padding:8px;">Cria um servidor!</p>';
               snapshot.forEach(doc => {
                   const s = doc.data();
                   const div = document.createElement('div');
@@ -859,12 +466,8 @@
         document.getElementById('chat-box').innerHTML = '<div class="empty-state"><span class="icon">💬</span><span>Seleciona um canal</span></div>';
         document.getElementById('current-channel-name').textContent = 'Seleciona um canal';
         if (unsubMessages) { unsubMessages(); unsubMessages = null; }
-
-        // Highlight server
-        document.querySelectorAll('.server-item').forEach(el => el.classList.remove('active'));
-        event?.target?.closest('.server-item')?.classList.add('active');
-
         loadChannels(serverId);
+        switchView('chat');
         if (window.innerWidth <= 768) toggleSidebar();
     }
 
@@ -888,184 +491,255 @@
     function selectChannel(serverId, channelId, channelName) {
         currentChannel = channelId;
         document.getElementById('current-channel-name').textContent = channelName;
-        document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
-        event?.target?.closest('.channel-item')?.classList.add('active');
-
         if (unsubMessages) unsubMessages();
-
         unsubMessages = db.collection('servers').doc(serverId)
           .collection('channels').doc(channelId)
           .collection('messages').orderBy('timestamp', 'asc')
           .onSnapshot(snapshot => {
               const box = document.getElementById('chat-box');
               box.innerHTML = '';
-              if (snapshot.empty) {
-                  box.innerHTML = `<div class="empty-state"><span class="icon">📭</span><span>Nenhuma mensagem ainda</span><span style="font-size:12px;">Sê o primeiro a escrever!</span></div>`;
-              }
-              snapshot.forEach(doc => {
-                  renderMessage(doc.data());
-              });
+              if (snapshot.empty) box.innerHTML = '<div class="empty-state"><span class="icon">📭</span><span>Sem mensagens</span></div>';
+              snapshot.forEach(doc => renderMessage(doc.data()));
               box.scrollTop = box.scrollHeight;
-          }, err => {
-              toast('Erro ao carregar mensagens', true);
-          });
-
+          }, err => toast('Erro ao carregar mensagens', true));
         if (window.innerWidth <= 768) toggleSidebar();
     }
 
     function renderMessage(msg) {
         const box = document.getElementById('chat-box');
         if (box.querySelector('.empty-state')) box.innerHTML = '';
-
         const div = document.createElement('div');
         div.className = 'message';
-
-        const avatarColor = msg.isBot ? '#5865f2' : (msg.isSystem ? '#747f8d' : stringToColor(msg.autor));
-        const avatarLetter = (msg.autor || '?')[0].toUpperCase();
-        const tag = msg.isBot ? '<span class="bot-tag">BOT</span>' : (msg.isSystem ? '<span class="system-tag">SISTEMA</span>' : '');
+        const color = msg.isBot ? '#5865f2' : (msg.isSystem ? '#747f8d' : stringToColor(msg.autor));
+        const letter = (msg.autor || '?')[0].toUpperCase();
+        const tag = msg.isBot ? '<span class="bot-tag">BOT</span>' : (msg.isSystem ? '<span class="system-tag">SYS</span>' : '');
         const time = msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}) : '';
-
         div.innerHTML = `
-            <div class="message-avatar" style="background:${avatarColor};">${avatarLetter}</div>
+            <div class="message-avatar" style="background:${color};">${letter}</div>
             <div class="message-content">
-                <div class="message-header">
-                    <span class="message-username">${esc(msg.autor)}</span>
-                    ${tag}
-                    <span class="message-time">${time}</span>
-                </div>
+                <div class="message-header"><span class="message-username">${esc(msg.autor)}</span>${tag}<span class="message-time">${time}</span></div>
                 <div class="message-text">${formatText(esc(msg.texto))}</div>
-            </div>
-        `;
+            </div>`;
         box.appendChild(div);
     }
 
-    function sendMsg() {
+    async function sendMsg() {
         const input = document.getElementById('msg-input');
         const texto = input.value.trim();
         if (!texto || !currentServer || !currentChannel || !currentUser) return;
-
         const msgData = {
             autor: currentUser.displayName || currentUser.email.split('@')[0],
-            texto: texto,
-            userId: currentUser.uid,
-            isBot: false,
-            isSystem: false,
+            texto, userId: currentUser.uid, isBot: false, isSystem: false,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         };
-
-        db.collection('servers').doc(currentServer)
-          .collection('channels').doc(currentChannel)
-          .collection('messages').add(msgData);
-
-        // Sistema de comandos
-        handleCommands(texto);
-
-        input.value = '';
-        input.style.height = 'auto';
+        try {
+            await db.collection('servers').doc(currentServer)
+              .collection('channels').doc(currentChannel)
+              .collection('messages').add(msgData);
+            handleCommands(texto);
+            input.value = '';
+            input.style.height = 'auto';
+        } catch(err) {
+            toast('Erro ao enviar', true);
+        }
     }
 
     function handleCommands(texto) {
         const lower = texto.toLowerCase();
-
-        // !ping
-        if (lower === '!ping') {
-            setTimeout(() => sendBotMsg('Pong! 🏓', 'Bot Sistema'), 400);
-        }
-        // !hora
-        else if (lower === '!hora') {
-            const agora = new Date().toLocaleString('pt-PT');
-            setTimeout(() => sendBotMsg(`🕐 Hora atual: ${agora}`, 'Bot Relógio'), 400);
-        }
-        // !dado
-        else if (lower === '!dado') {
-            const num = Math.floor(Math.random() * 6) + 1;
-            setTimeout(() => sendBotMsg(`🎲 O dado caiu em: **${num}**`, 'Bot Dado'), 400);
-        }
-        // !moeda
-        else if (lower === '!moeda') {
-            const res = Math.random() > 0.5 ? 'Cara' : 'Coroa';
-            setTimeout(() => sendBotMsg(`🪙 Resultado: **${res}**`, 'Bot Moeda'), 400);
-        }
-        // !serverinfo
-        else if (lower === '!serverinfo') {
-            db.collection('servers').doc(currentServer).get().then(doc => {
+        const commands = {
+            '!ping': () => sendSystemMsg('Pong! 🏓', 'Sistema'),
+            '!hora': () => sendSystemMsg(`🕐 ${new Date().toLocaleString('pt-PT')}`, 'Sistema'),
+            '!dado': () => sendSystemMsg(`🎲 ${Math.floor(Math.random()*6)+1}`, 'Sistema'),
+            '!moeda': () => sendSystemMsg(`🪙 ${Math.random()>0.5?'Cara':'Coroa'}`, 'Sistema'),
+            '!serverinfo': async () => {
+                const doc = await db.collection('servers').doc(currentServer).get();
                 const s = doc.data();
-                setTimeout(() => sendBotMsg(`📊 **${esc(s.name)}** | Membros: ${(s.members || []).length}`, 'Bot Info'), 400);
-            });
-        }
-        // !help
-        else if (lower === '!help') {
-            const help = `**Comandos:** !ping, !hora, !dado, !moeda, !serverinfo, !help`;
-            setTimeout(() => sendBotMsg(help, 'Bot Ajuda'), 400);
-        }
+                sendSystemMsg(`📊 **${esc(s.name)}** | Membros: ${(s.members||[]).length} | Dono: ${s.ownerId===currentUser.uid?'Tu':'Outro'}`, 'Sistema');
+            },
+            '!help': () => sendSystemMsg('**Comandos:** !ping | !hora | !dado | !moeda | !serverinfo | !help', 'Sistema')
+        };
+        if (commands[lower]) commands[lower]();
+        
+        // Verificar bots personalizados
+        checkCustomBots(texto);
     }
 
-    function sendBotMsg(texto, nomeBot) {
+    async function checkCustomBots(texto) {
+        if (!currentServer) return;
+        const botsSnap = await db.collection('bots').where('serverId', '==', currentServer).where('active', '==', true).get();
+        botsSnap.forEach(doc => {
+            const bot = doc.data();
+            if (bot.commands && bot.commands[texto.toLowerCase()]) {
+                setTimeout(() => sendBotMsg(bot.commands[texto.toLowerCase()], bot.name, doc.id), 300);
+            }
+        });
+    }
+
+    function sendSystemMsg(texto, nome) {
         if (!currentServer || !currentChannel) return;
         db.collection('servers').doc(currentServer)
           .collection('channels').doc(currentChannel)
           .collection('messages').add({
-            autor: nomeBot,
-            texto: texto,
-            userId: 'system',
-            isBot: true,
-            isSystem: false,
+            autor: nome, texto, userId: 'system', isBot: false, isSystem: true,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
     }
 
-    // ============ MODAIS ============
-    function showServerModal() {
-        document.getElementById('server-modal').style.display = 'flex';
-        document.getElementById('server-name').focus();
-    }
-    function closeServerModal() {
-        document.getElementById('server-modal').style.display = 'none';
-        document.getElementById('server-name').value = '';
+    function sendBotMsg(texto, nome, botId) {
+        if (!currentServer || !currentChannel) return;
+        db.collection('servers').doc(currentServer)
+          .collection('channels').doc(currentChannel)
+          .collection('messages').add({
+            autor: nome, texto, userId: botId || 'system', isBot: true, isSystem: false,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
     }
 
-    function createServer() {
-        const name = document.getElementById('server-name').value.trim();
-        if (!name) return toast('Dá um nome ao servidor!', true);
+    // ============ BOTS DASHBOARD ============
+    function loadMyBots() {
         if (!currentUser) return;
+        db.collection('bots').where('ownerId', '==', currentUser.uid)
+          .onSnapshot(snapshot => {
+              const list = document.getElementById('my-bots-list');
+              list.innerHTML = '';
+              if (snapshot.empty) {
+                  list.innerHTML = '<p style="color:var(--text-muted);">Nenhum bot criado. Cria um acima! 👆</p>';
+                  return;
+              }
+              snapshot.forEach(doc => {
+                  const bot = doc.data();
+                  const card = document.createElement('div');
+                  card.className = 'bot-card';
+                  card.innerHTML = `
+                      <div class="bot-info">
+                          <div class="bot-name">🤖 ${esc(bot.name)}</div>
+                          <div class="bot-status ${bot.active ? 'online' : 'offline'}">${bot.active ? '🟢 Ativo' : '⚫ Inativo'}</div>
+                          <div style="font-size:11px;color:var(--text-muted);margin-top:3px;">${esc(bot.desc||'Sem descrição')}</div>
+                          ${bot.serverId ? `<div style="font-size:11px;color:var(--green);margin-top:2px;">🔗 Ligado a um servidor</div>` : '<div style="font-size:11px;color:var(--yellow);margin-top:2px;">⚠️ Não está em nenhum servidor</div>'}
+                      </div>
+                      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+                          <div class="token-display" onclick="copyToken('${doc.id}', this)" title="Clique para copiar">
+                              ${bot.token ? bot.token.substring(0,20)+'...' : 'Sem token'}
+                              <span class="copied-tooltip">Copiado!</span>
+                          </div>
+                          <div style="display:flex;gap:4px;">
+                              <button class="btn btn-xs btn-primary" onclick="editBot('${doc.id}')">✏️</button>
+                              <button class="btn btn-xs btn-danger" onclick="deleteBot('${doc.id}')">🗑️</button>
+                          </div>
+                      </div>`;
+                  list.appendChild(card);
+              });
+          });
+    }
 
-        db.collection('servers').add({
-            name: name,
-            ownerId: currentUser.uid,
-            members: [currentUser.uid],
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(docRef => {
-            return db.collection('servers').doc(docRef.id).collection('channels').add({
-                name: 'geral',
+    async function createBot() {
+        const name = document.getElementById('new-bot-name').value.trim();
+        const desc = document.getElementById('new-bot-desc').value.trim();
+        if (!name) return toast('Dá um nome ao bot!', true);
+        if (!currentUser) return;
+        
+        const token = 'bot_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        try {
+            await db.collection('bots').add({
+                name, desc, token,
+                ownerId: currentUser.uid,
+                active: true,
+                serverId: null,
+                channelId: null,
+                commands: {},
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-        }).then(() => {
-            closeServerModal();
-            toast('Servidor criado! 🎉');
-        }).catch(() => toast('Erro ao criar servidor', true));
+            document.getElementById('new-bot-name').value = '';
+            document.getElementById('new-bot-desc').value = '';
+            toast('Bot criado! 🤖 Copia o token!');
+            switchView('dashboard');
+        } catch(err) {
+            toast('Erro ao criar bot', true);
+        }
     }
 
+    async function editBot(botId) {
+        const name = prompt('Novo nome do bot:');
+        if (!name) return;
+        const desc = prompt('Nova descrição:') || '';
+        const commandsStr = prompt('Comandos (formato: !comando=resposta, separados por vírgula):\nEx: !ola=Olá mundo!,!adeus=Até logo!');
+        
+        const commands = {};
+        if (commandsStr) {
+            commandsStr.split(',').forEach(pair => {
+                const [cmd, resp] = pair.split('=');
+                if (cmd && resp) commands[cmd.trim().toLowerCase()] = resp.trim();
+            });
+        }
+        
+        try {
+            await db.collection('bots').doc(botId).update({ name, desc, commands });
+            toast('Bot atualizado! ✏️');
+        } catch(err) {
+            toast('Erro ao editar', true);
+        }
+    }
+
+    async function deleteBot(botId) {
+        if (!confirm('Apagar este bot? Esta ação é irreversível.')) return;
+        try {
+            await db.collection('bots').doc(botId).delete();
+            toast('Bot apagado 🗑️');
+        } catch(err) {
+            toast('Erro ao apagar', true);
+        }
+    }
+
+    function copyToken(botId, element) {
+        db.collection('bots').doc(botId).get().then(doc => {
+            const token = doc.data().token;
+            navigator.clipboard.writeText(token).then(() => {
+                const tooltip = element.querySelector('.copied-tooltip');
+                tooltip.classList.add('show');
+                setTimeout(() => tooltip.classList.remove('show'), 1500);
+                toast('Token copiado! 📋');
+            });
+        });
+    }
+
+    // ============ MODAIS ============
+    function showServerModal() { document.getElementById('server-modal').style.display = 'flex'; document.getElementById('server-name').focus(); }
     function showChannelModal() {
-        if (!currentServer) return toast('Seleciona um servidor primeiro!', true);
+        if (!currentServer) return toast('Seleciona um servidor!', true);
         document.getElementById('channel-modal').style.display = 'flex';
         document.getElementById('channel-name').focus();
     }
-    function closeChannelModal() {
-        document.getElementById('channel-modal').style.display = 'none';
-        document.getElementById('channel-name').value = '';
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    async function createServer() {
+        const name = document.getElementById('server-name').value.trim();
+        if (!name || !currentUser) return;
+        try {
+            const docRef = await db.collection('servers').add({
+                name, ownerId: currentUser.uid, members: [currentUser.uid],
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            await db.collection('servers').doc(docRef.id).collection('channels').add({
+                name: 'geral',
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeModal('server-modal');
+            document.getElementById('server-name').value = '';
+            toast('Servidor criado! 🎉');
+        } catch(err) { toast('Erro ao criar servidor', true); }
     }
 
-    function createChannel() {
+    async function createChannel() {
         const name = document.getElementById('channel-name').value.trim();
         if (!name || !currentServer) return;
-
-        db.collection('servers').doc(currentServer).collection('channels').add({
-            name: name,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-            closeChannelModal();
-            toast('Canal criado! #' + name);
-        }).catch(() => toast('Erro ao criar canal', true));
+        try {
+            await db.collection('servers').doc(currentServer).collection('channels').add({
+                name, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            closeModal('channel-modal');
+            document.getElementById('channel-name').value = '';
+            toast('Canal #' + name + ' criado!');
+        } catch(err) { toast('Erro ao criar canal', true); }
     }
 
     // ============ UI HELPERS ============
@@ -1090,32 +764,20 @@
 
     function stringToColor(str) {
         let hash = 0;
-        for (let i = 0; i < (str || '?').length; i++) {
-            hash = str.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        const h = Math.abs(hash) % 360;
-        return `hsl(${h}, 60%, 55%)`;
+        for (let i = 0; i < (str || '?').length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        return `hsl(${Math.abs(hash) % 360}, 60%, 55%)`;
     }
 
-    function formatText(texto) {
-        // Menções @usuario
-        texto = texto.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
-        // Código `inline`
-        texto = texto.replace(/`([^`]+)`/g, '<span class="code">$1</span>');
-        // Negrito **texto**
-        texto = texto.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-        return texto;
+    function formatText(t) {
+        t = t.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+        t = t.replace(/`([^`]+)`/g, '<span class="code">$1</span>');
+        t = t.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        return t;
     }
 
-    // Fechar modais ao clicar fora
-    document.getElementById('server-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeServerModal();
-    });
-    document.getElementById('channel-modal').addEventListener('click', function(e) {
-        if (e.target === this) closeChannelModal();
-    });
-
-    // Auto-resize input
+    // Event listeners
+    document.getElementById('server-modal').addEventListener('click', function(e) { if (e.target===this) closeModal('server-modal'); });
+    document.getElementById('channel-modal').addEventListener('click', function(e) { if (e.target===this) closeModal('channel-modal'); });
     document.getElementById('msg-input').addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 120) + 'px';
