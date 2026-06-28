@@ -7,26 +7,27 @@
     <meta name="theme-color" content="#5865F2">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+
     <!-- CloudBinary SDK -->
     <script src="https://cdn.cloudbinary.io/sdk.min.js"></script>
-    
-    <!-- Firebase (mantido para auth) -->
+
+    <!-- Firebase Auth (mantido para autenticação) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    
+
+    <!-- Folha de Estilos -->
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-    <!-- ============ AUTENTICAÇÃO ============ -->
+    <!-- ======================== AUTENTICAÇÃO ======================== -->
     <div id="auth-container">
         <div class="auth-wrapper">
             <div class="auth-card">
                 <div class="auth-logo">🐺</div>
                 <h1>Cord</h1>
                 <p>Chat, amigos, bots e muito mais</p>
-                
+
                 <div class="auth-tabs">
                     <button class="auth-tab active" onclick="switchAuthTab('login')">Entrar</button>
                     <button class="auth-tab" onclick="switchAuthTab('register')">Registar</button>
@@ -68,24 +69,23 @@
         </div>
     </div>
 
-    <!-- ============ APLICAÇÃO ============ -->
+    <!-- ======================== APLICAÇÃO PRINCIPAL ======================== -->
     <div id="app-container">
         <!-- Topbar Mobile -->
         <div class="topbar">
             <button class="hamburger" onclick="toggleSidebar()">☰</button>
-            <span id="topbar-title">Cord</span>
+            <span class="topbar-title" id="topbar-title">Cord</span>
             <div class="avatar-sm" id="avatar-top"></div>
         </div>
 
+        <!-- Overlay Mobile -->
         <div class="overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
         <div class="app-layout">
-            <!-- Barra de Servidores -->
+            <!-- ======================== BARRA DE SERVIDORES ======================== -->
             <nav class="guilds-bar" id="guilds-bar">
                 <div class="guilds-list" id="guilds-list">
-                    <div class="guild-item home-guild active" onclick="goHome()" title="Início">
-                        🐺
-                    </div>
+                    <div class="guild-item home-guild active" onclick="goHome()" title="Início">🐺</div>
                     <div class="guild-separator"></div>
                 </div>
                 <div class="guilds-footer">
@@ -94,7 +94,7 @@
                 </div>
             </nav>
 
-            <!-- Sidebar de Canais -->
+            <!-- ======================== SIDEBAR DE CANAIS ======================== -->
             <aside class="sidebar" id="sidebar">
                 <div class="sidebar-header">
                     <span id="sidebar-server-name">🐺 Cord</span>
@@ -130,13 +130,13 @@
                 </div>
             </aside>
 
-            <!-- Conteúdo Principal -->
+            <!-- ======================== CONTEÚDO PRINCIPAL ======================== -->
             <main class="main-content">
-                <!-- Chat -->
+                <!-- ===== CHAT ===== -->
                 <div id="chat-view" class="view active">
                     <div class="chat-header">
-                        <span>#</span>
-                        <span id="current-channel-name">Seleciona um canal</span>
+                        <span class="hash">#</span>
+                        <span class="channel-name" id="current-channel-name">Seleciona um canal</span>
                         <div class="chat-header-actions">
                             <button onclick="toggleMembersPanel()">👥</button>
                             <input type="text" id="search-msg" placeholder="Pesquisar" oninput="searchMessages()">
@@ -150,7 +150,10 @@
                             </div>
                         </div>
                         <div class="members-panel" id="members-panel" style="display:none;">
-                            <div class="members-header">Membros <button onclick="toggleMembersPanel()">✕</button></div>
+                            <div class="members-header">
+                                <span>Membros</span>
+                                <button onclick="toggleMembersPanel()">✕</button>
+                            </div>
                             <div id="members-list"></div>
                         </div>
                     </div>
@@ -161,7 +164,7 @@
                     </div>
                 </div>
 
-                <!-- Amigos -->
+                <!-- ===== AMIGOS ===== -->
                 <div id="friends-view" class="view">
                     <div class="panel-header"><h2>👥 Amigos</h2></div>
                     <div class="panel-content">
@@ -169,8 +172,8 @@
                             <h3>➕ Adicionar</h3>
                             <p>Teu código: <b id="my-code">#----</b></p>
                             <input type="text" id="friend-input" placeholder="Código #0000">
-                            <button onclick="addFriend()">Adicionar</button>
-                            <p id="friend-result"></p>
+                            <button class="btn btn-sm btn-primary" onclick="addFriend()">Adicionar</button>
+                            <p id="friend-result" class="text-sm mt-1"></p>
                         </div>
                         <div class="card">
                             <h3>📋 Lista</h3>
@@ -183,7 +186,7 @@
                     </div>
                 </div>
 
-                <!-- Nitro -->
+                <!-- ===== NITRO ===== -->
                 <div id="nitro-view" class="view">
                     <div class="panel-header"><h2>⭐ Cord Nitro</h2></div>
                     <div class="panel-content">
@@ -200,25 +203,34 @@
                             </ul>
                             <button onclick="buyNitro()">Assinar Nitro</button>
                         </div>
-                        <div class="card"><h3>💳 Carteira: <span id="balance">0</span> 🪙</h3><button onclick="dailyReward()">🎁 Diário</button></div>
-                        <div class="card"><h3>🎨 Efeitos</h3><div id="effects-shop"></div></div>
-                        <div class="card"><h3>🏅 Badges</h3><div id="badges-shop"></div></div>
+                        <div class="card">
+                            <h3>💳 Carteira: <span id="balance">0</span> 🪙</h3>
+                            <button class="btn btn-sm btn-primary" onclick="dailyReward()">🎁 Diário</button>
+                        </div>
+                        <div class="card">
+                            <h3>🎨 Efeitos</h3>
+                            <div id="effects-shop"></div>
+                        </div>
+                        <div class="card">
+                            <h3>🏅 Badges</h3>
+                            <div id="badges-shop"></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Bots -->
+                <!-- ===== BOTS ===== -->
                 <div id="bots-view" class="view">
                     <div class="panel-header"><h2>🤖 Bots</h2></div>
                     <div class="panel-content">
-                        <div class="card guide">
+                        <div class="card">
                             <h3>📖 Como criar bots</h3>
                             <p>1. Cria um bot → 2. Copia o token → 3. Adiciona a servidores → 4. Programa!</p>
                         </div>
                         <div class="card">
                             <h3>➕ Novo Bot</h3>
-                            <input id="bot-name" placeholder="Nome">
-                            <input id="bot-desc" placeholder="Descrição">
-                            <button onclick="createBot()">Criar</button>
+                            <input type="text" id="bot-name" placeholder="Nome">
+                            <input type="text" id="bot-desc" placeholder="Descrição">
+                            <button class="btn btn-sm btn-primary" onclick="createBot()">Criar</button>
                         </div>
                         <div class="card">
                             <h3>📋 Meus Bots</h3>
@@ -228,12 +240,12 @@
                             <h3>🔌 Adicionar ao Servidor</h3>
                             <select id="select-bot"></select>
                             <select id="select-server"></select>
-                            <button onclick="addBotToServer()">Adicionar</button>
+                            <button class="btn btn-sm btn-primary" onclick="addBotToServer()">Adicionar</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Economia -->
+                <!-- ===== ECONOMIA ===== -->
                 <div id="economy-view" class="view">
                     <div class="panel-header"><h2>💰 Economia</h2></div>
                     <div class="panel-content">
@@ -244,42 +256,42 @@
                     </div>
                 </div>
 
-                <!-- Música -->
+                <!-- ===== MÚSICA ===== -->
                 <div id="music-view" class="view">
                     <div class="panel-header"><h2>🎵 Música</h2></div>
                     <div class="panel-content">
                         <div class="card">
                             <h3>🎧 Tocar Música</h3>
-                            <input id="music-url" placeholder="URL do YouTube">
-                            <button onclick="playMusic()">▶️ Tocar</button>
-                            <div id="now-playing"></div>
+                            <input type="text" id="music-url" placeholder="URL do YouTube">
+                            <button class="btn btn-sm btn-primary" onclick="playMusic()">▶️ Tocar</button>
+                            <div id="now-playing" class="mt-2"></div>
                         </div>
                         <div class="card"><h3>📋 Playlist</h3><div id="playlist"></div></div>
                     </div>
                 </div>
 
-                <!-- Chamadas -->
+                <!-- ===== CHAMADAS ===== -->
                 <div id="calls-view" class="view">
                     <div class="panel-header"><h2>📞 Chamadas</h2></div>
                     <div class="panel-content">
                         <div class="card">
                             <h3>📞 Iniciar Chamada</h3>
-                            <button onclick="startCall()">Iniciar Chamada de Voz</button>
-                            <div id="call-status"></div>
+                            <button class="btn btn-sm btn-primary" onclick="startCall()">Iniciar Chamada de Voz</button>
+                            <div id="call-status" class="mt-2"></div>
                         </div>
                         <div class="card"><h3>👥 Participantes</h3><div id="call-participants"></div></div>
                     </div>
                 </div>
 
-                <!-- Definições -->
+                <!-- ===== DEFINIÇÕES ===== -->
                 <div id="settings-view" class="view">
                     <div class="panel-header"><h2>⚙️ Definições</h2></div>
                     <div class="panel-content">
                         <div class="card">
                             <h3>👤 Perfil</h3>
-                            <input id="settings-name" placeholder="Nome">
+                            <input type="text" id="settings-name" placeholder="Nome">
                             <textarea id="settings-bio" placeholder="Bio"></textarea>
-                            <button onclick="saveProfile()">Guardar</button>
+                            <button class="btn btn-sm btn-primary" onclick="saveProfile()">Guardar</button>
                         </div>
                         <div class="card">
                             <h3>🎨 Tema</h3>
@@ -296,11 +308,12 @@
         </div>
     </div>
 
-    <!-- Modais -->
+    <!-- ======================== MODAIS ======================== -->
+    <!-- Modal Criar Servidor -->
     <div class="modal-overlay" id="server-modal">
         <div class="modal">
             <h3>Criar Servidor</h3>
-            <input id="server-name" placeholder="Nome do servidor">
+            <input type="text" id="server-name" placeholder="Nome do servidor">
             <select id="server-template">
                 <option value="default">Padrão</option>
                 <option value="gaming">Gaming</option>
@@ -313,10 +326,11 @@
         </div>
     </div>
 
+    <!-- Modal Criar Canal -->
     <div class="modal-overlay" id="channel-modal">
         <div class="modal">
             <h3>Criar Canal</h3>
-            <input id="channel-name" placeholder="Nome do canal">
+            <input type="text" id="channel-name" placeholder="Nome do canal">
             <div class="modal-btns">
                 <button class="btn-cancel" onclick="closeModal('channel-modal')">Cancelar</button>
                 <button class="btn-confirm" onclick="createChannel()">Criar</button>
@@ -324,16 +338,20 @@
         </div>
     </div>
 
+    <!-- Modal Descobrir Servidores -->
     <div class="modal-overlay" id="discover-modal">
         <div class="modal">
             <h3>🔍 Descobrir Servidores</h3>
-            <input id="discover-search" placeholder="Pesquisar..." oninput="searchServers()">
-            <div id="discover-results"></div>
+            <input type="text" id="discover-search" placeholder="Pesquisar..." oninput="searchServers()">
+            <div id="discover-results" class="mt-2"></div>
             <button class="btn-cancel" onclick="closeModal('discover-modal')">Fechar</button>
         </div>
     </div>
 
+    <!-- Toast -->
     <div class="toast" id="toast"></div>
+
+    <!-- ======================== SCRIPTS ======================== -->
     <script src="script.js"></script>
 </body>
 </html>
